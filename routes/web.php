@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\FacturaController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -22,6 +23,18 @@ Route::middleware('auth')->group(function () {
 Route::middleware(['auth'])->group(function () {
     Route::get('/facturas/crear', [FacturaController::class, 'crear'])->name('facturas.crear');
     Route::post('/facturas/guardar', [FacturaController::class, 'guardar'])->name('facturas.guardar');
+});
+
+// User Management Routes (Protected - requires auth and SUPERADMIN role)
+Route::middleware(['auth', 'role:SUPERADMIN'])->prefix('usuarios')->name('usuarios.')->group(function () {
+    Route::get('/', [UserController::class, 'index'])->name('index');
+    Route::get('/crear', [UserController::class, 'create'])->name('create');
+    Route::post('/', [UserController::class, 'store'])->name('store');
+    Route::get('/{usuario}', [UserController::class, 'show'])->name('show');
+    Route::get('/{usuario}/editar', [UserController::class, 'edit'])->name('edit');
+    Route::put('/{usuario}', [UserController::class, 'update'])->name('update');
+    Route::delete('/{usuario}', [UserController::class, 'destroy'])->name('destroy');
+    Route::patch('/{usuario}/toggle-status', [UserController::class, 'toggleStatus'])->name('toggle-status');
 });
 
 require __DIR__.'/auth.php';

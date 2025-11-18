@@ -33,8 +33,37 @@ class Usuario extends Authenticatable
         'activo' => 'boolean',
     ];
 
+    // Accessors para compatibilidad con Breeze (inglés -> español)
+    public function getNameAttribute()
+    {
+        return $this->nombre;
+    }
+
+    public function getEmailAttribute()
+    {
+        return $this->correo;
+    }
+
     public function getAuthPassword()
     {
         return $this->contraseña_hash;
+    }
+
+    // Método para verificar si es superadmin
+    public function isSuperAdmin()
+    {
+        return $this->rol === 'SUPERADMIN';
+    }
+
+    // Método para verificar si es cliente SaaS
+    public function isClienteSaas()
+    {
+        return $this->rol === 'CLIENTE_SAAS';
+    }
+
+    // Método para verificar si tiene un rol específico
+    public function hasRole($role)
+    {
+        return $this->rol === $role;
     }
 }
