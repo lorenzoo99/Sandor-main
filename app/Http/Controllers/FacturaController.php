@@ -5,6 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\FacturaVenta;
 use App\Models\DetalleFacturaVenta;
 use App\Models\Cliente;
+use App\Models\AsientoContable;
+use App\Models\DetalleAsiento;
+use App\Models\CuentaContable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Auth;
@@ -172,6 +175,9 @@ class FacturaController extends Controller
                 ]);
             }
 
+            // Generar asiento contable automático
+            $this->generarAsientoVenta($factura);
+
             DB::commit();
 
             return redirect()->route('facturas.index')
@@ -220,9 +226,117 @@ class FacturaController extends Controller
                 ->with('error', 'La factura ya está marcada como pagada.');
         }
 
-        $factura->update(['estado' => 'PAGADA']);
+        DB::beginTransaction();
 
-        return redirect()->back()
-            ->with('success', "Factura {$factura->numero_factura} marcada como pagada.");
+        try {
+            $factura->update(['estado' => 'PAGADA']);
+
+            // Generar asiento contable de pago
+            $this->generarAsientoPago($factura);
+
+            DB::commit();
+
+            return redirect()->back()
+                ->with('success', "Factura {$factura->numero_factura} marcada como pagada.");
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()
+                ->with('error', 'Error al marcar como pagada: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Generar asiento contable al crear factura de venta
+     * DEBITO: 1305 Clientes (total)
+     * CREDITO: 4135 Ventas (subtotal)
+     * CREDITO: 2408 IVA por Pagar (iva)
+     */
+    private function generarAsientoVenta(FacturaVenta $factura)
+    {
+        // Obtener cuentas contables
+        $cuentaClientes = CuentaContable::where('codigo', '1305')->first();
+        $cuentaVentas = CuentaContable::where('codigo', '4135')->first();
+        $cuentaIva = CuentaContable::where('codigo', '2408')->first();
+
+        if (!$cuentaClientes || !$cuentaVentas) {
+            throw new \Exception('No se encontraron las cuentas contables necesarias. Ejecute el seeder del PUC.');
+        }
+
+        // Crear asiento contable
+        $asiento = AsientoContable::create([
+            'fecha' => $factura->fecha_emision,
+            'descripcion' => "Venta según factura {$factura->numero_factura}",
+            'id_usuario' => Auth::user()->id_usuario,
+            'total_debito' => $factura->total,
+            'total_credito' => $factura->total
+        ]);
+
+        // DEBITO: Clientes (por el total)
+        DetalleAsiento::create([
+            'id_asiento' => $asiento->id_asiento,
+            'id_cuenta' => $cuentaClientes->id_cuenta,
+            'tipo_movimiento' => 'DEBITO',
+            'valor' => $factura->total
+        ]);
+
+        // CREDITO: Ventas (por el subtotal)
+        DetalleAsiento::create([
+            'id_asiento' => $asiento->id_asiento,
+            'id_cuenta' => $cuentaVentas->id_cuenta,
+            'tipo_movimiento' => 'CREDITO',
+            'valor' => $factura->subtotal
+        ]);
+
+        // CREDITO: IVA por Pagar (si hay IVA)
+        if ($factura->iva > 0 && $cuentaIva) {
+            DetalleAsiento::create([
+                'id_asiento' => $asiento->id_asiento,
+                'id_cuenta' => $cuentaIva->id_cuenta,
+                'tipo_movimiento' => 'CREDITO',
+                'valor' => $factura->iva
+            ]);
+        }
+    }
+
+    /**
+     * Generar asiento contable al pagar factura
+     * DEBITO: 1105 Caja (total)
+     * CREDITO: 1305 Clientes (total)
+     */
+    private function generarAsientoPago(FacturaVenta $factura)
+    {
+        // Obtener cuentas contables
+        $cuentaCaja = CuentaContable::where('codigo', '1105')->first();
+        $cuentaClientes = CuentaContable::where('codigo', '1305')->first();
+
+        if (!$cuentaCaja || !$cuentaClientes) {
+            throw new \Exception('No se encontraron las cuentas contables necesarias.');
+        }
+
+        // Crear asiento contable
+        $asiento = AsientoContable::create([
+            'fecha' => now(),
+            'descripcion' => "Pago recibido de factura {$factura->numero_factura}",
+            'id_usuario' => Auth::user()->id_usuario,
+            'total_debito' => $factura->total,
+            'total_credito' => $factura->total
+        ]);
+
+        // DEBITO: Caja (recibimos el dinero)
+        DetalleAsiento::create([
+            'id_asiento' => $asiento->id_asiento,
+            'id_cuenta' => $cuentaCaja->id_cuenta,
+            'tipo_movimiento' => 'DEBITO',
+            'valor' => $factura->total
+        ]);
+
+        // CREDITO: Clientes (reducimos la cuenta por cobrar)
+        DetalleAsiento::create([
+            'id_asiento' => $asiento->id_asiento,
+            'id_cuenta' => $cuentaClientes->id_cuenta,
+            'tipo_movimiento' => 'CREDITO',
+            'valor' => $factura->total
+        ]);
     }
 }

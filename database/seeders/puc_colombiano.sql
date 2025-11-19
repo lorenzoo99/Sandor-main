@@ -25,6 +25,7 @@ INSERT INTO CuentaContable (codigo, nombre, tipo, nivel, estado) VALUES
 ('1105', 'CAJA', 'ACTIVO', 3, 1),
 ('1110', 'BANCOS', 'ACTIVO', 3, 1),
 ('1305', 'CLIENTES', 'ACTIVO', 3, 1),
+('1355', 'ANTICIPO DE IMPUESTOS Y CONTRIBUCIONES', 'ACTIVO', 3, 1),
 ('1399', 'PROVISIONES', 'ACTIVO', 3, 1),
 ('1435', 'MERCANCIAS NO FABRICADAS POR LA EMPRESA', 'ACTIVO', 3, 1),
 ('1524', 'EQUIPO DE OFICINA', 'ACTIVO', 3, 1);
@@ -41,6 +42,7 @@ INSERT INTO CuentaContable (codigo, nombre, tipo, nivel, estado) VALUES
 INSERT INTO CuentaContable (codigo, nombre, tipo, nivel, estado) VALUES
 ('22', 'PROVEEDORES', 'PASIVO', 2, 1),
 ('23', 'CUENTAS POR PAGAR', 'PASIVO', 2, 1),
+('24', 'IMPUESTOS GRAVAMENES Y TASAS', 'PASIVO', 2, 1),
 ('25', 'OBLIGACIONES LABORALES', 'PASIVO', 2, 1);
 
 -- Nivel 3: Cuenta
@@ -50,6 +52,7 @@ INSERT INTO CuentaContable (codigo, nombre, tipo, nivel, estado) VALUES
 ('2368', 'RETENCION SALUD', 'PASIVO', 3, 1),
 ('2370', 'RETENCION PENSION', 'PASIVO', 3, 1),
 ('2380', 'APORTES PARAFISCALES', 'PASIVO', 3, 1),
+('2408', 'IMPUESTO SOBRE LAS VENTAS POR PAGAR', 'PASIVO', 3, 1),
 ('2505', 'SALARIOS POR PAGAR', 'PASIVO', 3, 1);
 
 -- ==========================================
