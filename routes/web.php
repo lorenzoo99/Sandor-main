@@ -8,6 +8,7 @@ use App\Http\Controllers\NominaController;
 use App\Http\Controllers\ProductoController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\DB;
 
 
 Route::get('/', function () {
@@ -15,7 +16,36 @@ Route::get('/', function () {
 });
 
 Route::get('/dashboard', function () {
-    return view('dashboard');
+    // Obtener mes y año actual
+    $mesActual = now()->month;
+    $anioActual = now()->year;
+    $fechaInicio = now()->startOfMonth();
+    $fechaFin = now()->endOfMonth();
+
+    // Ingresos del mes (Facturas de venta)
+    $ingresos = DB::table('Factura')
+        ->whereBetween('fecha_emision', [$fechaInicio, $fechaFin])
+        ->where('estado', '!=', 'ANULADA')
+        ->selectRaw('COALESCE(SUM(total), 0) as total, COUNT(*) as cantidad')
+        ->first();
+
+    // Gastos del mes (Compras)
+    $gastos = DB::table('Compra')
+        ->whereBetween('fecha_compra', [$fechaInicio, $fechaFin])
+        ->where('estado', '!=', 'ANULADA')
+        ->selectRaw('COALESCE(SUM(total), 0) as total, COUNT(*) as cantidad')
+        ->first();
+
+    // Calcular balance
+    $balance = ($ingresos->total ?? 0) - ($gastos->total ?? 0);
+
+    return view('dashboard', [
+        'ingresosMes' => $ingresos->total ?? 0,
+        'gastosMes' => $gastos->total ?? 0,
+        'facturasEmitidas' => $ingresos->cantidad ?? 0,
+        'comprasRealizadas' => $gastos->cantidad ?? 0,
+        'balance' => $balance,
+    ]);
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
