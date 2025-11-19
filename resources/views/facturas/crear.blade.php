@@ -27,6 +27,36 @@
     <form method="POST" action="{{ route('facturas.guardar') }}" id="facturaForm" class="space-y-6">
         @csrf
 
+        <!-- Selector de Tipo de Factura -->
+        <x-card>
+            <div class="max-w-md">
+                <label for="tipo_factura" class="block text-sm font-medium text-gray-700 mb-2">
+                    Tipo de Factura <span class="text-red-500">*</span>
+                </label>
+                <select
+                    name="tipo_factura"
+                    id="tipo_factura"
+                    required
+                    class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 @error('tipo_factura') border-red-500 @enderror"
+                    onchange="toggleClienteSection()"
+                >
+                    <option value="NORMAL" {{ old('tipo_factura', 'NORMAL') === 'NORMAL' ? 'selected' : '' }}>
+                        📄 Factura Normal (Venta rápida / POS)
+                    </option>
+                    <option value="ELECTRONICA" {{ old('tipo_factura') === 'ELECTRONICA' ? 'selected' : '' }}>
+                        ⚡ Factura Electrónica (Con datos completos de cliente)
+                    </option>
+                </select>
+                <p class="mt-2 text-xs text-gray-500">
+                    <strong>Factura Normal:</strong> Para ventas rápidas sin datos del cliente.<br>
+                    <strong>Factura Electrónica:</strong> Requiere datos completos del cliente para la DIAN.
+                </p>
+                @error('tipo_factura')
+                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                @enderror
+            </div>
+        </x-card>
+
         <!-- Información DIAN -->
         <x-card title="📋 Información DIAN">
             <p class="text-sm text-gray-600 mb-4">Datos requeridos por la DIAN para facturación electrónica</p>
@@ -141,17 +171,16 @@
         </x-card>
 
         <!-- Información del Cliente -->
-        <x-card title="👤 Información del Cliente">
+        <x-card title="👤 Información del Cliente" id="clienteSection">
             <p class="text-sm text-gray-600 mb-4">Selecciona el cliente que recibirá la factura</p>
 
             <div>
                 <label for="id_cliente" class="block text-sm font-medium text-gray-700 mb-1">
-                    Cliente <span class="text-red-500">*</span>
+                    Cliente <span class="text-red-500" id="clienteRequired">*</span>
                 </label>
                 <select
                     name="id_cliente"
                     id="id_cliente"
-                    required
                     class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 @error('id_cliente') border-red-500 @enderror"
                 >
                     <option value="">Seleccione un cliente...</option>
@@ -469,9 +498,31 @@ function formatCurrency(amount) {
     }).format(amount);
 }
 
+// Mostrar/Ocultar sección de cliente según tipo de factura
+function toggleClienteSection() {
+    const tipoFactura = document.getElementById('tipo_factura').value;
+    const clienteSection = document.getElementById('clienteSection');
+    const idCliente = document.getElementById('id_cliente');
+    const clienteRequired = document.getElementById('clienteRequired');
+
+    if (tipoFactura === 'ELECTRONICA') {
+        // Mostrar sección de cliente y hacer campo requerido
+        clienteSection.style.display = 'block';
+        idCliente.required = true;
+        if (clienteRequired) clienteRequired.style.display = 'inline';
+    } else {
+        // Ocultar sección de cliente y quitar requerimiento
+        clienteSection.style.display = 'none';
+        idCliente.required = false;
+        idCliente.value = '';
+        if (clienteRequired) clienteRequired.style.display = 'none';
+    }
+}
+
 // Calcular totales al cargar la página
 document.addEventListener('DOMContentLoaded', function() {
     calcularTotales();
+    toggleClienteSection(); // Inicializar estado de sección de cliente
 });
 </script>
 @endpush

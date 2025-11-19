@@ -146,14 +146,23 @@
                             </div>
                             <div class="text-xs text-gray-500">
                                 {{ $factura->prefijo }}
+                                @if($factura->tipo_factura === 'ELECTRONICA')
+                                    <span class="text-blue-600">⚡</span>
+                                @else
+                                    <span class="text-gray-600">📄</span>
+                                @endif
                             </div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                             {{ \Carbon\Carbon::parse($factura->fecha_emision)->format('d/m/Y H:i') }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-900">{{ $factura->cliente->nombre }}</div>
-                            <div class="text-xs text-gray-500">{{ $factura->cliente->identificacion }}</div>
+                            @if($factura->cliente)
+                                <div class="text-sm text-gray-900">{{ $factura->cliente->nombre }}</div>
+                                <div class="text-xs text-gray-500">{{ $factura->cliente->identificacion }}</div>
+                            @else
+                                <div class="text-sm text-gray-500 italic">Venta rápida / POS</div>
+                            @endif
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="text-sm font-semibold text-gray-900">

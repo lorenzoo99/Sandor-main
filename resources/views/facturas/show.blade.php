@@ -137,43 +137,67 @@
                 </dl>
             </x-card>
 
-            <!-- Información del Cliente -->
+            <!-- Tipo de Factura -->
             <x-card>
                 <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                     <svg class="w-6 h-6 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"></path>
                     </svg>
-                    Cliente
+                    Tipo de Factura
                 </h3>
                 <dl class="space-y-3">
                     <div>
-                        <dt class="text-xs text-gray-500 uppercase tracking-wide">Nombre</dt>
-                        <dd class="text-sm font-medium text-gray-900 mt-1">{{ $factura->cliente->nombre }}</dd>
+                        <dt class="text-xs text-gray-500 uppercase tracking-wide">Tipo</dt>
+                        <dd class="text-sm font-medium text-gray-900 mt-1">
+                            @if($factura->tipo_factura === 'ELECTRONICA')
+                                <x-badge color="blue">⚡ Factura Electrónica</x-badge>
+                            @else
+                                <x-badge color="gray">📄 Factura Normal / POS</x-badge>
+                            @endif
+                        </dd>
                     </div>
-                    <div>
-                        <dt class="text-xs text-gray-500 uppercase tracking-wide">Identificación</dt>
-                        <dd class="text-sm text-gray-900 mt-1">{{ $factura->cliente->tipo_identificacion }} {{ $factura->cliente->identificacion }}</dd>
-                    </div>
-                    @if($factura->cliente->correo)
-                        <div>
-                            <dt class="text-xs text-gray-500 uppercase tracking-wide">Correo</dt>
-                            <dd class="text-sm text-gray-900 mt-1">{{ $factura->cliente->correo }}</dd>
-                        </div>
-                    @endif
-                    @if($factura->cliente->telefono)
-                        <div>
-                            <dt class="text-xs text-gray-500 uppercase tracking-wide">Teléfono</dt>
-                            <dd class="text-sm text-gray-900 mt-1">{{ $factura->cliente->telefono }}</dd>
-                        </div>
-                    @endif
-                    @if($factura->cliente->direccion)
-                        <div>
-                            <dt class="text-xs text-gray-500 uppercase tracking-wide">Dirección</dt>
-                            <dd class="text-sm text-gray-900 mt-1">{{ $factura->cliente->direccion }}</dd>
-                        </div>
-                    @endif
                 </dl>
             </x-card>
+
+            <!-- Información del Cliente -->
+            @if($factura->cliente)
+                <x-card>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                        <svg class="w-6 h-6 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                        </svg>
+                        Cliente
+                    </h3>
+                    <dl class="space-y-3">
+                        <div>
+                            <dt class="text-xs text-gray-500 uppercase tracking-wide">Nombre</dt>
+                            <dd class="text-sm font-medium text-gray-900 mt-1">{{ $factura->cliente->nombre }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-xs text-gray-500 uppercase tracking-wide">Identificación</dt>
+                            <dd class="text-sm text-gray-900 mt-1">{{ $factura->cliente->tipo_identificacion }} {{ $factura->cliente->identificacion }}</dd>
+                        </div>
+                        @if($factura->cliente->correo)
+                            <div>
+                                <dt class="text-xs text-gray-500 uppercase tracking-wide">Correo</dt>
+                                <dd class="text-sm text-gray-900 mt-1">{{ $factura->cliente->correo }}</dd>
+                            </div>
+                        @endif
+                        @if($factura->cliente->telefono)
+                            <div>
+                                <dt class="text-xs text-gray-500 uppercase tracking-wide">Teléfono</dt>
+                                <dd class="text-sm text-gray-900 mt-1">{{ $factura->cliente->telefono }}</dd>
+                            </div>
+                        @endif
+                        @if($factura->cliente->direccion)
+                            <div>
+                                <dt class="text-xs text-gray-500 uppercase tracking-wide">Dirección</dt>
+                                <dd class="text-sm text-gray-900 mt-1">{{ $factura->cliente->direccion }}</dd>
+                            </div>
+                        @endif
+                    </dl>
+                </x-card>
+            @endif
 
             <!-- Información DIAN -->
             <x-card>

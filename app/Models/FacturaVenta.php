@@ -12,6 +12,7 @@ class FacturaVenta extends Model
 
     protected $fillable = [
         'numero_factura',
+        'tipo_factura',
         'fecha_emision',
         'id_cliente',
         'subtotal',
