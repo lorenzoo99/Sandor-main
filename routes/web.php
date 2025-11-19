@@ -6,6 +6,7 @@ use App\Http\Controllers\FacturaCompraController;
 use App\Http\Controllers\ContabilidadController;
 use App\Http\Controllers\NominaController;
 use App\Http\Controllers\ProductoController;
+use App\Http\Controllers\ReporteController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -84,6 +85,11 @@ Route::middleware(['auth'])->prefix('productos')->name('productos.')->group(func
     // API routes for invoicing
     Route::get('/buscar', [ProductoController::class, 'buscar'])->name('buscar');
     Route::get('/{producto}/detalle', [ProductoController::class, 'detalle'])->name('detalle');
+});
+
+// Report Routes (Reportes)
+Route::middleware(['auth'])->prefix('reportes')->name('reportes.')->group(function () {
+    Route::get('/ingresos-gastos', [ReporteController::class, 'ingresosGastos'])->name('ingresos-gastos');
 });
 
 // User Management Routes (Protected - requires auth and SUPERADMIN role)
