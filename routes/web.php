@@ -20,9 +20,13 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-Route::middleware(['auth'])->group(function () {
-    Route::get('/facturas/crear', [FacturaController::class, 'crear'])->name('facturas.crear');
-    Route::post('/facturas/guardar', [FacturaController::class, 'guardar'])->name('facturas.guardar');
+Route::middleware(['auth'])->prefix('facturas')->name('facturas.')->group(function () {
+    Route::get('/', [FacturaController::class, 'index'])->name('index');
+    Route::get('/crear', [FacturaController::class, 'crear'])->name('crear');
+    Route::post('/guardar', [FacturaController::class, 'guardar'])->name('guardar');
+    Route::get('/{factura}', [FacturaController::class, 'show'])->name('show');
+    Route::patch('/{factura}/anular', [FacturaController::class, 'anular'])->name('anular');
+    Route::patch('/{factura}/marcar-pagada', [FacturaController::class, 'marcarPagada'])->name('marcar-pagada');
 });
 
 // User Management Routes (Protected - requires auth and SUPERADMIN role)

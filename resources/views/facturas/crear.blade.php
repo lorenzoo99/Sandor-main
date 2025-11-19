@@ -1,103 +1,478 @@
-<x-app-layout>
-  <h2 class="text-xl font-bold mb-4">Crear factura</h2>
+@extends('layouts.admin')
 
-  @if(session('success')) <div class="bg-green-100 p-2 mb-4">{{ session('success') }}</div> @endif
-  @if(session('error')) <div class="bg-red-100 p-2 mb-4">{{ session('error') }}</div> @endif
+@section('title', 'Crear Factura')
+@section('page-title', 'Nueva Factura de Venta')
 
-  <form method="POST" action="{{ route('facturas.guardar') }}">
-    @csrf
+@section('content')
+<div class="max-w-5xl mx-auto space-y-6">
+    <!-- Breadcrumb -->
+    <nav class="flex" aria-label="Breadcrumb">
+        <ol class="inline-flex items-center space-x-1 md:space-x-3">
+            <li class="inline-flex items-center">
+                <a href="{{ route('facturas.index') }}" class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600">
+                    Facturas
+                </a>
+            </li>
+            <li>
+                <div class="flex items-center">
+                    <svg class="w-3 h-3 text-gray-400 mx-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                    </svg>
+                    <span class="ml-1 text-sm font-medium text-gray-500 md:ml-2">Nueva Factura</span>
+                </div>
+            </li>
+        </ol>
+    </nav>
 
-    <!-- Metadatos -->
-    <div class="grid grid-cols-2 gap-4">
-      <div>
-        <label>Prefijo</label>
-        <input name="prefijo" value="SETP" class="border rounded w-full" required>
-      </div>
-      <div>
-        <label>Número resolución</label>
-        <input name="numero_resolucion" value="18760000001" class="border rounded w-full" required>
-      </div>
-      <div>
-        <label>Medio de pago</label>
-        <input name="medio_pago" value="Transferencia" class="border rounded w-full">
-      </div>
-      <div>
-        <label>Forma de pago</label>
-        <input name="forma_pago" value="Contado" class="border rounded w-full">
-      </div>
-      <div>
-        <label>Moneda</label>
-        <input name="moneda" value="COP" class="border rounded w-full">
-      </div>
-    </div>
+    <form method="POST" action="{{ route('facturas.guardar') }}" id="facturaForm" class="space-y-6">
+        @csrf
 
-    <!-- Cliente -->
-    <div class="mt-4">
-      <label>Cliente</label>
-      <select name="id_cliente" class="border rounded w-full">
-        @foreach($clientes as $cliente)
-          <option value="{{ $cliente->id_cliente }}"
-            data-nit="{{ $cliente->numero_identificacion }}" 
-            data-tipo="{{ $cliente->tipo_identificacion }}">
-            {{ $cliente->nombre }} — {{ $cliente->numero_identificacion }}
-          </option>
-        @endforeach
-      </select>
-    </div>
+        <!-- Información DIAN -->
+        <x-card title="📋 Información DIAN">
+            <p class="text-sm text-gray-600 mb-4">Datos requeridos por la DIAN para facturación electrónica</p>
 
-    <!-- Items: simple UI con 3 items (podemos mejorar con JS dinámico) -->
-    <div class="mt-4">
-      <label>Detalles (items)</label>
-      <div id="items">
-        <div class="item mb-2">
-          <input name="items[0][descripcion]" placeholder="Descripción" class="border rounded w-full mb-1" required>
-          <div class="grid grid-cols-3 gap-2">
-            <input name="items[0][cantidad]" type="number" step="1" placeholder="Cantidad" class="border rounded" required>
-            <input name="items[0][valor_unitario]" type="number" step="0.01" placeholder="Valor unitario" class="border rounded" required>
-            <input name="items[0][iva]" type="number" step="0.01" placeholder="IVA línea" class="border rounded" value="0.00">
-          </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <!-- Número de Factura -->
+                <div>
+                    <label for="numero_factura" class="block text-sm font-medium text-gray-700 mb-1">
+                        Número de Factura <span class="text-red-500">*</span>
+                    </label>
+                    <input
+                        type="text"
+                        name="numero_factura"
+                        id="numero_factura"
+                        value="{{ old('numero_factura', $numeroFactura) }}"
+                        readonly
+                        class="w-full rounded-lg border-gray-300 bg-gray-50 shadow-sm"
+                    >
+                    <p class="mt-1 text-xs text-gray-500">Generado automáticamente</p>
+                </div>
+
+                <!-- Prefijo -->
+                <div>
+                    <label for="prefijo" class="block text-sm font-medium text-gray-700 mb-1">
+                        Prefijo <span class="text-red-500">*</span>
+                    </label>
+                    <input
+                        type="text"
+                        name="prefijo"
+                        id="prefijo"
+                        value="{{ old('prefijo', 'FV') }}"
+                        required
+                        class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 @error('prefijo') border-red-500 @enderror"
+                    >
+                    <p class="mt-1 text-xs text-gray-500">Ej: FV, SETP</p>
+                    @error('prefijo')
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <!-- Número de Resolución -->
+                <div>
+                    <label for="numero_resolucion" class="block text-sm font-medium text-gray-700 mb-1">
+                        Número de Resolución DIAN <span class="text-red-500">*</span>
+                    </label>
+                    <input
+                        type="text"
+                        name="numero_resolucion"
+                        id="numero_resolucion"
+                        value="{{ old('numero_resolucion', '18760000001') }}"
+                        required
+                        class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 @error('numero_resolucion') border-red-500 @enderror"
+                    >
+                    <p class="mt-1 text-xs text-gray-500">Resolución autorizada por la DIAN</p>
+                    @error('numero_resolucion')
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <!-- Medio de Pago -->
+                <div>
+                    <label for="medio_pago" class="block text-sm font-medium text-gray-700 mb-1">
+                        Medio de Pago <span class="text-red-500">*</span>
+                    </label>
+                    <select
+                        name="medio_pago"
+                        id="medio_pago"
+                        required
+                        class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    >
+                        <option value="Efectivo">Efectivo</option>
+                        <option value="Transferencia" selected>Transferencia Bancaria</option>
+                        <option value="Tarjeta">Tarjeta de Crédito/Débito</option>
+                        <option value="Cheque">Cheque</option>
+                    </select>
+                    <p class="mt-1 text-xs text-gray-500">Cómo pagará el cliente</p>
+                </div>
+
+                <!-- Forma de Pago -->
+                <div>
+                    <label for="forma_pago" class="block text-sm font-medium text-gray-700 mb-1">
+                        Forma de Pago <span class="text-red-500">*</span>
+                    </label>
+                    <select
+                        name="forma_pago"
+                        id="forma_pago"
+                        required
+                        class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    >
+                        <option value="Contado" selected>Contado</option>
+                        <option value="Crédito">Crédito</option>
+                    </select>
+                    <p class="mt-1 text-xs text-gray-500">Contado o crédito</p>
+                </div>
+
+                <!-- Moneda -->
+                <div>
+                    <label for="moneda" class="block text-sm font-medium text-gray-700 mb-1">
+                        Moneda
+                    </label>
+                    <input
+                        type="text"
+                        name="moneda"
+                        id="moneda"
+                        value="COP"
+                        readonly
+                        class="w-full rounded-lg border-gray-300 bg-gray-50 shadow-sm"
+                    >
+                    <p class="mt-1 text-xs text-gray-500">Pesos colombianos</p>
+                </div>
+            </div>
+        </x-card>
+
+        <!-- Información del Cliente -->
+        <x-card title="👤 Información del Cliente">
+            <p class="text-sm text-gray-600 mb-4">Selecciona el cliente que recibirá la factura</p>
+
+            <div>
+                <label for="id_cliente" class="block text-sm font-medium text-gray-700 mb-1">
+                    Cliente <span class="text-red-500">*</span>
+                </label>
+                <select
+                    name="id_cliente"
+                    id="id_cliente"
+                    required
+                    class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 @error('id_cliente') border-red-500 @enderror"
+                >
+                    <option value="">Seleccione un cliente...</option>
+                    @foreach($clientes as $cliente)
+                        <option value="{{ $cliente->id_cliente }}" {{ old('id_cliente') == $cliente->id_cliente ? 'selected' : '' }}>
+                            {{ $cliente->nombre }} - {{ $cliente->numero_identificacion }}
+                        </option>
+                    @endforeach
+                </select>
+                <p class="mt-1 text-xs text-gray-500">Cliente al que se le emitirá la factura</p>
+                @error('id_cliente')
+                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                @enderror
+            </div>
+        </x-card>
+
+        <!-- Productos/Servicios -->
+        <x-card title="🛒 Productos o Servicios">
+            <p class="text-sm text-gray-600 mb-4">Agrega los productos o servicios que incluye esta factura</p>
+
+            <div id="items-container" class="space-y-4">
+                <!-- Item 1 (inicial) -->
+                <div class="item-row border border-gray-200 rounded-lg p-4 bg-gray-50">
+                    <div class="flex justify-between items-center mb-3">
+                        <h4 class="font-medium text-gray-700">Item #1</h4>
+                        <button type="button" onclick="removeItem(this)" class="text-red-600 hover:text-red-800 text-sm hidden">
+                            Eliminar
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-1 gap-3">
+                        <!-- Descripción -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                Descripción del Producto/Servicio <span class="text-red-500">*</span>
+                            </label>
+                            <input
+                                type="text"
+                                name="items[0][descripcion]"
+                                placeholder="Ej: Ibuprofeno 400mg x 30 tabletas"
+                                required
+                                class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                            >
+                        </div>
+
+                        <div class="grid grid-cols-4 gap-3">
+                            <!-- Cantidad -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">
+                                    Cantidad <span class="text-red-500">*</span>
+                                </label>
+                                <input
+                                    type="number"
+                                    name="items[0][cantidad]"
+                                    min="1"
+                                    step="1"
+                                    value="1"
+                                    required
+                                    onchange="calcularTotales()"
+                                    class="cantidad w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                >
+                                <p class="mt-1 text-xs text-gray-500">Unidades</p>
+                            </div>
+
+                            <!-- Valor Unitario -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">
+                                    Valor Unitario <span class="text-red-500">*</span>
+                                </label>
+                                <input
+                                    type="number"
+                                    name="items[0][valor_unitario]"
+                                    min="0"
+                                    step="0.01"
+                                    value="0"
+                                    required
+                                    onchange="calcularTotales()"
+                                    class="valor-unitario w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                >
+                                <p class="mt-1 text-xs text-gray-500">Precio c/u</p>
+                            </div>
+
+                            <!-- IVA -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">
+                                    IVA (opcional)
+                                </label>
+                                <input
+                                    type="number"
+                                    name="items[0][iva]"
+                                    min="0"
+                                    step="0.01"
+                                    value="0"
+                                    onchange="calcularTotales()"
+                                    class="iva-item w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                >
+                                <p class="mt-1 text-xs text-gray-500">IVA del item</p>
+                            </div>
+
+                            <!-- Subtotal Item -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">
+                                    Subtotal
+                                </label>
+                                <input
+                                    type="text"
+                                    readonly
+                                    value="$0"
+                                    class="subtotal-item w-full rounded-lg border-gray-300 bg-gray-100 shadow-sm"
+                                >
+                                <p class="mt-1 text-xs text-gray-500">Calculado</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <button
+                type="button"
+                onclick="agregarItem()"
+                class="mt-4 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition inline-flex items-center"
+            >
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                Agregar otro item
+            </button>
+        </x-card>
+
+        <!-- Totales -->
+        <x-card title="💰 Totales de la Factura">
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Subtotal</label>
+                        <div class="text-2xl font-bold text-gray-900" id="display-subtotal">$0</div>
+                        <p class="text-xs text-gray-500 mt-1">Sin IVA</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">IVA Total</label>
+                        <div class="text-2xl font-bold text-gray-900" id="display-iva">$0</div>
+                        <p class="text-xs text-gray-500 mt-1">Impuestos</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Total a Pagar</label>
+                        <div class="text-3xl font-bold text-blue-600" id="display-total">$0</div>
+                        <p class="text-xs text-gray-500 mt-1">Subtotal + IVA</p>
+                    </div>
+                </div>
+            </div>
+        </x-card>
+
+        <!-- Botones de Acción -->
+        <div class="flex items-center justify-between pt-6 border-t border-gray-200">
+            <a
+                href="{{ route('facturas.index') }}"
+                class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition font-medium"
+            >
+                Cancelar
+            </a>
+            <button
+                type="submit"
+                class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium inline-flex items-center text-lg"
+            >
+                <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                Guardar Factura
+            </button>
         </div>
-      </div>
+    </form>
+</div>
 
-      <button type="button" id="addItem" class="mt-2 bg-gray-200 p-2 rounded">Agregar item</button>
-    </div>
+@push('scripts')
+<script>
+let itemIndex = 1;
 
-    <div class="mt-4">
-      <label>Observaciones</label>
-      <textarea name="observacion" class="border rounded w-full"></textarea>
-    </div>
+function agregarItem() {
+    const container = document.getElementById('items-container');
+    const newIndex = itemIndex;
 
-    <div class="mt-4">
-      <label>Subtotal</label>
-      <input type="number" step="0.01" name="subtotal" class="border rounded w-full" required>
-    </div>
-    <div class="mt-3">
-      <label>IVA total</label>
-      <input type="number" step="0.01" name="iva" class="border rounded w-full" required>
-    </div>
-    <div class="mt-3">
-      <label>Total</label>
-      <input type="number" step="0.01" name="total" class="border rounded w-full" required>
-    </div>
+    const itemHTML = `
+        <div class="item-row border border-gray-200 rounded-lg p-4 bg-gray-50">
+            <div class="flex justify-between items-center mb-3">
+                <h4 class="font-medium text-gray-700">Item #${newIndex + 1}</h4>
+                <button type="button" onclick="removeItem(this)" class="text-red-600 hover:text-red-800 text-sm">
+                    Eliminar
+                </button>
+            </div>
 
-    <button type="submit" class="bg-blue-500 text-white p-2 rounded mt-4">Guardar y enviar a DIAN</button>
-  </form>
+            <div class="grid grid-cols-1 gap-3">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        Descripción del Producto/Servicio <span class="text-red-500">*</span>
+                    </label>
+                    <input
+                        type="text"
+                        name="items[${newIndex}][descripcion]"
+                        placeholder="Ej: Ibuprofeno 400mg x 30 tabletas"
+                        required
+                        class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    >
+                </div>
 
-  <script>
-    let idx = 1;
-    document.getElementById('addItem').addEventListener('click', () => {
-      const container = document.getElementById('items');
-      const html = `
-        <div class="item mb-2">
-          <input name="items[${idx}][descripcion]" placeholder="Descripción" class="border rounded w-full mb-1" required>
-          <div class="grid grid-cols-3 gap-2">
-            <input name="items[${idx}][cantidad]" type="number" step="1" placeholder="Cantidad" class="border rounded" required>
-            <input name="items[${idx}][valor_unitario]" type="number" step="0.01" placeholder="Valor unitario" class="border rounded" required>
-            <input name="items[${idx}][iva]" type="number" step="0.01" placeholder="IVA línea" class="border rounded" value="0.00">
-          </div>
-        </div>`;
-      container.insertAdjacentHTML('beforeend', html);
-      idx++;
+                <div class="grid grid-cols-4 gap-3">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            Cantidad <span class="text-red-500">*</span>
+                        </label>
+                        <input
+                            type="number"
+                            name="items[${newIndex}][cantidad]"
+                            min="1"
+                            step="1"
+                            value="1"
+                            required
+                            onchange="calcularTotales()"
+                            class="cantidad w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                        >
+                        <p class="mt-1 text-xs text-gray-500">Unidades</p>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            Valor Unitario <span class="text-red-500">*</span>
+                        </label>
+                        <input
+                            type="number"
+                            name="items[${newIndex}][valor_unitario]"
+                            min="0"
+                            step="0.01"
+                            value="0"
+                            required
+                            onchange="calcularTotales()"
+                            class="valor-unitario w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                        >
+                        <p class="mt-1 text-xs text-gray-500">Precio c/u</p>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            IVA (opcional)
+                        </label>
+                        <input
+                            type="number"
+                            name="items[${newIndex}][iva]"
+                            min="0"
+                            step="0.01"
+                            value="0"
+                            onchange="calcularTotales()"
+                            class="iva-item w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                        >
+                        <p class="mt-1 text-xs text-gray-500">IVA del item</p>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            Subtotal
+                        </label>
+                        <input
+                            type="text"
+                            readonly
+                            value="$0"
+                            class="subtotal-item w-full rounded-lg border-gray-300 bg-gray-100 shadow-sm"
+                        >
+                        <p class="mt-1 text-xs text-gray-500">Calculado</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    container.insertAdjacentHTML('beforeend', itemHTML);
+    itemIndex++;
+    calcularTotales();
+}
+
+function removeItem(button) {
+    button.closest('.item-row').remove();
+    calcularTotales();
+}
+
+function calcularTotales() {
+    let subtotalTotal = 0;
+    let ivaTotal = 0;
+
+    document.querySelectorAll('.item-row').forEach((item, index) => {
+        const cantidad = parseFloat(item.querySelector('.cantidad').value) || 0;
+        const valorUnitario = parseFloat(item.querySelector('.valor-unitario').value) || 0;
+        const ivaItem = parseFloat(item.querySelector('.iva-item').value) || 0;
+
+        const subtotalItem = cantidad * valorUnitario;
+
+        // Actualizar subtotal del item
+        item.querySelector('.subtotal-item').value = formatCurrency(subtotalItem);
+
+        subtotalTotal += subtotalItem;
+        ivaTotal += ivaItem;
     });
-  </script>
-</x-app-layout>
+
+    const total = subtotalTotal + ivaTotal;
+
+    // Actualizar displays
+    document.getElementById('display-subtotal').textContent = formatCurrency(subtotalTotal);
+    document.getElementById('display-iva').textContent = formatCurrency(ivaTotal);
+    document.getElementById('display-total').textContent = formatCurrency(total);
+}
+
+function formatCurrency(amount) {
+    return new Intl.NumberFormat('es-CO', {
+        style: 'currency',
+        currency: 'COP',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+    }).format(amount);
+}
+
+// Calcular totales al cargar la página
+document.addEventListener('DOMContentLoaded', function() {
+    calcularTotales();
+});
+</script>
+@endpush
+@endsection

@@ -122,11 +122,11 @@
                         </svg>
                     </button>
                     <div x-show="open" x-collapse class="ml-4 space-y-1">
+                        <a href="{{ route('facturas.index') }}" class="flex items-center px-4 py-2 text-sm text-blue-100 rounded-lg hover:bg-blue-700 transition {{ request()->routeIs('facturas.index') || request()->routeIs('facturas.show') ? 'bg-blue-700' : '' }}">
+                            Facturas Emitidas
+                        </a>
                         <a href="{{ route('facturas.crear') }}" class="flex items-center px-4 py-2 text-sm text-blue-100 rounded-lg hover:bg-blue-700 transition {{ request()->routeIs('facturas.crear') ? 'bg-blue-700' : '' }}">
                             Crear Factura
-                        </a>
-                        <a href="#" class="flex items-center px-4 py-2 text-sm text-blue-100 rounded-lg hover:bg-blue-700 transition">
-                            Facturas Emitidas
                         </a>
                         <a href="#" class="flex items-center px-4 py-2 text-sm text-blue-100 rounded-lg hover:bg-blue-700 transition">
                             Cuentas por Cobrar
