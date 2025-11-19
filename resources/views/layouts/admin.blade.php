@@ -83,6 +83,7 @@
                 @endif
 
                 <!-- Contabilidad -->
+                @if(Auth::user()->isSuperAdmin())
                 <div x-data="{ open: {{ request()->routeIs('contabilidad.*') ? 'true' : 'false' }} }">
                     <button @click="open = !open" class="flex items-center justify-between w-full px-4 py-3 mb-2 text-sm font-medium text-blue-100 rounded-lg hover:bg-blue-700 transition">
                         <div class="flex items-center">
@@ -113,6 +114,7 @@
                         </a>
                     </div>
                 </div>
+                @endif
 
                 <!-- Facturación -->
                 <div x-data="{ open: {{ request()->routeIs('facturas.*') ? 'true' : 'false' }} }">
@@ -161,6 +163,7 @@
                 </div>
 
                 <!-- Nómina -->
+                @if(Auth::user()->isSuperAdmin())
                 <div x-data="{ open: {{ request()->routeIs('nomina.*') ? 'true' : 'false' }} }">
                     <button @click="open = !open" class="flex items-center justify-between w-full px-4 py-3 mb-2 text-sm font-medium text-blue-100 rounded-lg hover:bg-blue-700 transition">
                         <div class="flex items-center">
@@ -185,6 +188,7 @@
                         </a>
                     </div>
                 </div>
+                @endif
 
                 <!-- Productos -->
                 <div x-data="{ open: {{ request()->routeIs('productos.*') ? 'true' : 'false' }} }">
