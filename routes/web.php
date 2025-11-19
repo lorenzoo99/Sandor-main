@@ -23,14 +23,14 @@ Route::get('/dashboard', function () {
     $fechaFin = now()->endOfMonth();
 
     // Ingresos del mes (Facturas de venta)
-    $ingresos = DB::table('Factura')
+    $ingresos = DB::table('factura')
         ->whereBetween('fecha_emision', [$fechaInicio, $fechaFin])
         ->where('estado', '!=', 'ANULADA')
         ->selectRaw('COALESCE(SUM(total), 0) as total, COUNT(*) as cantidad')
         ->first();
 
     // Gastos del mes (Compras)
-    $gastos = DB::table('Compra')
+    $gastos = DB::table('compra')
         ->whereBetween('fecha_compra', [$fechaInicio, $fechaFin])
         ->where('estado', '!=', 'ANULADA')
         ->selectRaw('COALESCE(SUM(total), 0) as total, COUNT(*) as cantidad')
