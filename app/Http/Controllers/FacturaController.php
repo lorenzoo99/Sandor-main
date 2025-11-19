@@ -70,8 +70,9 @@ class FacturaController extends Controller
      */
     public function guardar(Request $request)
     {
-        $request->validate([
-            'id_cliente' => 'required|exists:Cliente,id_cliente',
+        // Validación base
+        $rules = [
+            'tipo_factura' => 'required|in:ELECTRONICA,NORMAL',
             'prefijo' => 'required|string|max:10',
             'numero_resolucion' => 'required|string|max:50',
             'medio_pago' => 'required|string',
@@ -80,7 +81,14 @@ class FacturaController extends Controller
             'items.*.descripcion' => 'required|string',
             'items.*.cantidad' => 'required|numeric|min:1',
             'items.*.valor_unitario' => 'required|numeric|min:0',
-        ]);
+        ];
+
+        // Solo requerir cliente si es factura electrónica
+        if ($request->tipo_factura === 'ELECTRONICA') {
+            $rules['id_cliente'] = 'required|exists:Cliente,id_cliente';
+        }
+
+        $request->validate($rules);
 
         DB::beginTransaction();
 
@@ -104,8 +112,9 @@ class FacturaController extends Controller
             // Crear factura
             $factura = FacturaVenta::create([
                 'numero_factura' => $request->numero_factura,
+                'tipo_factura' => $request->tipo_factura,
                 'fecha_emision' => now(),
-                'id_cliente' => $request->id_cliente,
+                'id_cliente' => $request->tipo_factura === 'ELECTRONICA' ? $request->id_cliente : null,
                 'subtotal' => $subtotal,
                 'iva' => $totalIva,
                 'total' => $total,
