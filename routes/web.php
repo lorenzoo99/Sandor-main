@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\FacturaController;
+use App\Http\Controllers\FacturaCompraController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -27,6 +28,16 @@ Route::middleware(['auth'])->prefix('facturas')->name('facturas.')->group(functi
     Route::get('/{factura}', [FacturaController::class, 'show'])->name('show');
     Route::patch('/{factura}/anular', [FacturaController::class, 'anular'])->name('anular');
     Route::patch('/{factura}/marcar-pagada', [FacturaController::class, 'marcarPagada'])->name('marcar-pagada');
+});
+
+// Purchase Management Routes (Compras)
+Route::middleware(['auth'])->prefix('compras')->name('compras.')->group(function () {
+    Route::get('/', [FacturaCompraController::class, 'index'])->name('index');
+    Route::get('/crear', [FacturaCompraController::class, 'crear'])->name('crear');
+    Route::post('/guardar', [FacturaCompraController::class, 'guardar'])->name('guardar');
+    Route::get('/{factura}', [FacturaCompraController::class, 'show'])->name('show');
+    Route::patch('/{factura}/anular', [FacturaCompraController::class, 'anular'])->name('anular');
+    Route::patch('/{factura}/marcar-pagada', [FacturaCompraController::class, 'marcarPagada'])->name('marcar-pagada');
 });
 
 // User Management Routes (Protected - requires auth and SUPERADMIN role)

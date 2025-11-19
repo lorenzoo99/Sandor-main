@@ -128,14 +128,11 @@
                         <a href="{{ route('facturas.crear') }}" class="flex items-center px-4 py-2 text-sm text-blue-100 rounded-lg hover:bg-blue-700 transition {{ request()->routeIs('facturas.crear') ? 'bg-blue-700' : '' }}">
                             Crear Factura
                         </a>
-                        <a href="#" class="flex items-center px-4 py-2 text-sm text-blue-100 rounded-lg hover:bg-blue-700 transition">
-                            Cuentas por Cobrar
-                        </a>
                     </div>
                 </div>
 
                 <!-- Compras -->
-                <div x-data="{ open: false }">
+                <div x-data="{ open: {{ request()->routeIs('compras.*') ? 'true' : 'false' }} }">
                     <button @click="open = !open" class="flex items-center justify-between w-full px-4 py-3 mb-2 text-sm font-medium text-blue-100 rounded-lg hover:bg-blue-700 transition">
                         <div class="flex items-center">
                             <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -148,14 +145,11 @@
                         </svg>
                     </button>
                     <div x-show="open" x-collapse class="ml-4 space-y-1">
-                        <a href="#" class="flex items-center px-4 py-2 text-sm text-blue-100 rounded-lg hover:bg-blue-700 transition">
-                            Proveedores
-                        </a>
-                        <a href="#" class="flex items-center px-4 py-2 text-sm text-blue-100 rounded-lg hover:bg-blue-700 transition">
+                        <a href="{{ route('compras.index') }}" class="flex items-center px-4 py-2 text-sm text-blue-100 rounded-lg hover:bg-blue-700 transition {{ request()->routeIs('compras.index') || request()->routeIs('compras.show') ? 'bg-blue-700' : '' }}">
                             Facturas de Compra
                         </a>
-                        <a href="#" class="flex items-center px-4 py-2 text-sm text-blue-100 rounded-lg hover:bg-blue-700 transition">
-                            Cuentas por Pagar
+                        <a href="{{ route('compras.crear') }}" class="flex items-center px-4 py-2 text-sm text-blue-100 rounded-lg hover:bg-blue-700 transition {{ request()->routeIs('compras.crear') ? 'bg-blue-700' : '' }}">
+                            Registrar Compra
                         </a>
                     </div>
                 </div>
