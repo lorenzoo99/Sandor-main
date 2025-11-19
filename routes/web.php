@@ -3,6 +3,7 @@
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\FacturaController;
 use App\Http\Controllers\FacturaCompraController;
+use App\Http\Controllers\ContabilidadController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -38,6 +39,16 @@ Route::middleware(['auth'])->prefix('compras')->name('compras.')->group(function
     Route::get('/{factura}', [FacturaCompraController::class, 'show'])->name('show');
     Route::patch('/{factura}/anular', [FacturaCompraController::class, 'anular'])->name('anular');
     Route::patch('/{factura}/marcar-pagada', [FacturaCompraController::class, 'marcarPagada'])->name('marcar-pagada');
+});
+
+// Accounting Routes (Contabilidad)
+Route::middleware(['auth'])->prefix('contabilidad')->name('contabilidad.')->group(function () {
+    Route::get('/plan-cuentas', [ContabilidadController::class, 'planCuentas'])->name('plan-cuentas');
+    Route::get('/asientos', [ContabilidadController::class, 'asientos'])->name('asientos');
+    Route::get('/asientos/{asiento}', [ContabilidadController::class, 'verAsiento'])->name('ver-asiento');
+    Route::get('/libro-diario', [ContabilidadController::class, 'libroDiario'])->name('libro-diario');
+    Route::get('/libro-mayor', [ContabilidadController::class, 'libroMayor'])->name('libro-mayor');
+    Route::get('/balance-comprobacion', [ContabilidadController::class, 'balanceComprobacion'])->name('balance-comprobacion');
 });
 
 // User Management Routes (Protected - requires auth and SUPERADMIN role)
