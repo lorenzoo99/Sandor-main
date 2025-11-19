@@ -16,9 +16,7 @@
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <x-stat-card
             title="Ingresos del Mes"
-            value="$45,231,890"
-            :trend="'up'"
-            trendValue="+12.5%"
+            :value="'$' . number_format($ingresosMes, 0, ',', '.')"
             color="green"
         >
             <x-slot name="icon">
@@ -30,9 +28,7 @@
 
         <x-stat-card
             title="Gastos del Mes"
-            value="$23,456,000"
-            :trend="'down'"
-            trendValue="-5.2%"
+            :value="'$' . number_format($gastosMes, 0, ',', '.')"
             color="red"
         >
             <x-slot name="icon">
@@ -43,23 +39,21 @@
         </x-stat-card>
 
         <x-stat-card
-            title="Cuentas por Cobrar"
-            value="$12,345,000"
-            color="yellow"
+            title="Balance del Mes"
+            :value="'$' . number_format($balance, 0, ',', '.')"
+            :color="$balance >= 0 ? 'blue' : 'yellow'"
         >
             <x-slot name="icon">
                 <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
                 </svg>
             </x-slot>
         </x-stat-card>
 
         <x-stat-card
             title="Facturas Emitidas"
-            value="156"
-            :trend="'up'"
-            trendValue="+8"
-            color="blue"
+            :value="$facturasEmitidas"
+            color="purple"
         >
             <x-slot name="icon">
                 <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
