@@ -53,8 +53,6 @@ class FacturaController extends Controller
      */
     public function crear()
     {
-        $clientes = Cliente::orderBy('nombre')->get();
-
         // Generar próximo número de factura
         $ultimaFactura = FacturaVenta::latest('id_factura')->first();
         $siguienteNumero = $ultimaFactura ?
@@ -62,7 +60,7 @@ class FacturaController extends Controller
             1;
         $numeroFactura = 'FV-' . str_pad($siguienteNumero, 6, '0', STR_PAD_LEFT);
 
-        return view('facturas.crear', compact('clientes', 'numeroFactura'));
+        return view('facturas.crear', compact('numeroFactura'));
     }
 
     /**
@@ -83,9 +81,14 @@ class FacturaController extends Controller
             'items.*.valor_unitario' => 'required|numeric|min:0',
         ];
 
-        // Solo requerir cliente si es factura electrónica
+        // Solo requerir datos de cliente si es factura electrónica
         if ($request->tipo_factura === 'ELECTRONICA') {
-            $rules['id_cliente'] = 'required|exists:Cliente,id_cliente';
+            $rules['cliente_nombre'] = 'required|string|max:150';
+            $rules['cliente_tipo_identificacion'] = 'required|in:CC,CE,NIT';
+            $rules['cliente_identificacion'] = 'required|string|max:30';
+            $rules['cliente_direccion'] = 'nullable|string|max:200';
+            $rules['cliente_telefono'] = 'nullable|string|max:30';
+            $rules['cliente_correo'] = 'nullable|email|max:100';
         }
 
         $request->validate($rules);
@@ -93,6 +96,28 @@ class FacturaController extends Controller
         DB::beginTransaction();
 
         try {
+            $idCliente = null;
+
+            // Si es factura electrónica, buscar o crear el cliente
+            if ($request->tipo_factura === 'ELECTRONICA') {
+                $cliente = Cliente::where('numero_identificacion', $request->cliente_identificacion)->first();
+
+                if (!$cliente) {
+                    // Crear nuevo cliente
+                    $cliente = Cliente::create([
+                        'nombre' => $request->cliente_nombre,
+                        'tipo_identificacion' => $request->cliente_tipo_identificacion,
+                        'numero_identificacion' => $request->cliente_identificacion,
+                        'direccion' => $request->cliente_direccion,
+                        'telefono' => $request->cliente_telefono,
+                        'correo' => $request->cliente_correo,
+                        'fecha_registro' => now()
+                    ]);
+                }
+
+                $idCliente = $cliente->id_cliente;
+            }
+
             // Calcular totales desde los items
             $subtotal = 0;
             $totalIva = 0;
@@ -114,7 +139,7 @@ class FacturaController extends Controller
                 'numero_factura' => $request->numero_factura,
                 'tipo_factura' => $request->tipo_factura,
                 'fecha_emision' => now(),
-                'id_cliente' => $request->tipo_factura === 'ELECTRONICA' ? $request->id_cliente : null,
+                'id_cliente' => $idCliente,
                 'subtotal' => $subtotal,
                 'iva' => $totalIva,
                 'total' => $total,

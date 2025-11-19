@@ -172,28 +172,138 @@
 
         <!-- Información del Cliente -->
         <x-card title="👤 Información del Cliente" id="clienteSection">
-            <p class="text-sm text-gray-600 mb-4">Selecciona el cliente que recibirá la factura</p>
+            <p class="text-sm text-gray-600 mb-4">Ingresa los datos del cliente que recibirá la factura electrónica</p>
 
-            <div>
-                <label for="id_cliente" class="block text-sm font-medium text-gray-700 mb-1">
-                    Cliente <span class="text-red-500" id="clienteRequired">*</span>
-                </label>
-                <select
-                    name="id_cliente"
-                    id="id_cliente"
-                    class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 @error('id_cliente') border-red-500 @enderror"
-                >
-                    <option value="">Seleccione un cliente...</option>
-                    @foreach($clientes as $cliente)
-                        <option value="{{ $cliente->id_cliente }}" {{ old('id_cliente') == $cliente->id_cliente ? 'selected' : '' }}>
-                            {{ $cliente->nombre }} - {{ $cliente->numero_identificacion }}
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Tipo de Persona -->
+                <div>
+                    <label for="tipo_persona" class="block text-sm font-medium text-gray-700 mb-1">
+                        Tipo de Persona <span class="text-red-500">*</span>
+                    </label>
+                    <select
+                        name="tipo_persona"
+                        id="tipo_persona"
+                        onchange="updateTipoIdentificacion()"
+                        class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 @error('tipo_persona') border-red-500 @enderror"
+                    >
+                        <option value="NATURAL" {{ old('tipo_persona', 'NATURAL') === 'NATURAL' ? 'selected' : '' }}>
+                            👤 Persona Natural (CC/CE)
                         </option>
-                    @endforeach
-                </select>
-                <p class="mt-1 text-xs text-gray-500">Cliente al que se le emitirá la factura</p>
-                @error('id_cliente')
-                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                @enderror
+                        <option value="JURIDICA" {{ old('tipo_persona') === 'JURIDICA' ? 'selected' : '' }}>
+                            🏢 Persona Jurídica (NIT)
+                        </option>
+                    </select>
+                    <p class="mt-1 text-xs text-gray-500">Selecciona si es persona o empresa</p>
+                    @error('tipo_persona')
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <!-- Tipo de Identificación -->
+                <div>
+                    <label for="cliente_tipo_identificacion" class="block text-sm font-medium text-gray-700 mb-1">
+                        Tipo de Identificación <span class="text-red-500">*</span>
+                    </label>
+                    <select
+                        name="cliente_tipo_identificacion"
+                        id="cliente_tipo_identificacion"
+                        class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 @error('cliente_tipo_identificacion') border-red-500 @enderror"
+                    >
+                        <option value="CC" {{ old('cliente_tipo_identificacion', 'CC') === 'CC' ? 'selected' : '' }}>Cédula de Ciudadanía (CC)</option>
+                        <option value="CE" {{ old('cliente_tipo_identificacion') === 'CE' ? 'selected' : '' }}>Cédula de Extranjería (CE)</option>
+                        <option value="NIT" {{ old('cliente_tipo_identificacion') === 'NIT' ? 'selected' : '' }}>NIT</option>
+                    </select>
+                    <p class="mt-1 text-xs text-gray-500">Documento de identificación</p>
+                    @error('cliente_tipo_identificacion')
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <!-- Nombre/Razón Social -->
+                <div>
+                    <label for="cliente_nombre" class="block text-sm font-medium text-gray-700 mb-1">
+                        <span id="label_nombre">Nombre Completo</span> <span class="text-red-500">*</span>
+                    </label>
+                    <input
+                        type="text"
+                        name="cliente_nombre"
+                        id="cliente_nombre"
+                        value="{{ old('cliente_nombre') }}"
+                        placeholder="Ej: Juan Pérez o Empresa S.A.S."
+                        class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 @error('cliente_nombre') border-red-500 @enderror"
+                    >
+                    <p class="mt-1 text-xs text-gray-500">Nombre completo o razón social</p>
+                    @error('cliente_nombre')
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <!-- Número de Identificación -->
+                <div>
+                    <label for="cliente_identificacion" class="block text-sm font-medium text-gray-700 mb-1">
+                        Número de Identificación <span class="text-red-500">*</span>
+                    </label>
+                    <input
+                        type="text"
+                        name="cliente_identificacion"
+                        id="cliente_identificacion"
+                        value="{{ old('cliente_identificacion') }}"
+                        placeholder="Ej: 1234567890"
+                        class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 @error('cliente_identificacion') border-red-500 @enderror"
+                    >
+                    <p class="mt-1 text-xs text-gray-500">Número de cédula o NIT</p>
+                    @error('cliente_identificacion')
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <!-- Dirección -->
+                <div>
+                    <label for="cliente_direccion" class="block text-sm font-medium text-gray-700 mb-1">
+                        Dirección
+                    </label>
+                    <input
+                        type="text"
+                        name="cliente_direccion"
+                        id="cliente_direccion"
+                        value="{{ old('cliente_direccion') }}"
+                        placeholder="Ej: Calle 123 #45-67"
+                        class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    >
+                    <p class="mt-1 text-xs text-gray-500">Dirección física (opcional)</p>
+                </div>
+
+                <!-- Teléfono -->
+                <div>
+                    <label for="cliente_telefono" class="block text-sm font-medium text-gray-700 mb-1">
+                        Teléfono
+                    </label>
+                    <input
+                        type="text"
+                        name="cliente_telefono"
+                        id="cliente_telefono"
+                        value="{{ old('cliente_telefono') }}"
+                        placeholder="Ej: 3001234567"
+                        class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    >
+                    <p class="mt-1 text-xs text-gray-500">Teléfono o celular (opcional)</p>
+                </div>
+
+                <!-- Correo Electrónico -->
+                <div class="md:col-span-2">
+                    <label for="cliente_correo" class="block text-sm font-medium text-gray-700 mb-1">
+                        Correo Electrónico
+                    </label>
+                    <input
+                        type="email"
+                        name="cliente_correo"
+                        id="cliente_correo"
+                        value="{{ old('cliente_correo') }}"
+                        placeholder="cliente@ejemplo.com"
+                        class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    >
+                    <p class="mt-1 text-xs text-gray-500">Correo para envío de factura electrónica (opcional)</p>
+                </div>
             </div>
         </x-card>
 
@@ -498,27 +608,41 @@ function formatCurrency(amount) {
     }).format(amount);
 }
 
+// Actualizar tipo de identificación según tipo de persona
+function updateTipoIdentificacion() {
+    const tipoPersona = document.getElementById('tipo_persona').value;
+    const tipoIdentificacion = document.getElementById('cliente_tipo_identificacion');
+    const labelNombre = document.getElementById('label_nombre');
+
+    if (tipoPersona === 'JURIDICA') {
+        // Persona Jurídica: solo NIT
+        tipoIdentificacion.value = 'NIT';
+        tipoIdentificacion.innerHTML = '<option value="NIT">NIT</option>';
+        labelNombre.textContent = 'Razón Social';
+    } else {
+        // Persona Natural: CC o CE
+        tipoIdentificacion.innerHTML = `
+            <option value="CC">Cédula de Ciudadanía (CC)</option>
+            <option value="CE">Cédula de Extranjería (CE)</option>
+        `;
+        labelNombre.textContent = 'Nombre Completo';
+    }
+}
+
 // Mostrar/Ocultar secciones según tipo de factura
 function toggleClienteSection() {
     const tipoFactura = document.getElementById('tipo_factura').value;
     const clienteSection = document.getElementById('clienteSection');
     const dianSection = document.getElementById('dianSection');
-    const idCliente = document.getElementById('id_cliente');
-    const clienteRequired = document.getElementById('clienteRequired');
 
     if (tipoFactura === 'ELECTRONICA') {
         // Mostrar secciones de cliente y DIAN para factura electrónica
         clienteSection.style.display = 'block';
         dianSection.style.display = 'block';
-        idCliente.required = true;
-        if (clienteRequired) clienteRequired.style.display = 'inline';
     } else {
         // Ocultar secciones de cliente y DIAN para factura normal/POS
         clienteSection.style.display = 'none';
         dianSection.style.display = 'none';
-        idCliente.required = false;
-        idCliente.value = '';
-        if (clienteRequired) clienteRequired.style.display = 'none';
     }
 }
 
