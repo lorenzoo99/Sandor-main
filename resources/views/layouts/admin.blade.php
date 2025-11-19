@@ -83,7 +83,7 @@
                 @endif
 
                 <!-- Contabilidad -->
-                <div x-data="{ open: false }">
+                <div x-data="{ open: {{ request()->routeIs('contabilidad.*') ? 'true' : 'false' }} }">
                     <button @click="open = !open" class="flex items-center justify-between w-full px-4 py-3 mb-2 text-sm font-medium text-blue-100 rounded-lg hover:bg-blue-700 transition">
                         <div class="flex items-center">
                             <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -96,14 +96,20 @@
                         </svg>
                     </button>
                     <div x-show="open" x-collapse class="ml-4 space-y-1">
-                        <a href="#" class="flex items-center px-4 py-2 text-sm text-blue-100 rounded-lg hover:bg-blue-700 transition">
-                            Libros Contables
-                        </a>
-                        <a href="#" class="flex items-center px-4 py-2 text-sm text-blue-100 rounded-lg hover:bg-blue-700 transition">
+                        <a href="{{ route('contabilidad.plan-cuentas') }}" class="flex items-center px-4 py-2 text-sm text-blue-100 rounded-lg hover:bg-blue-700 transition {{ request()->routeIs('contabilidad.plan-cuentas') ? 'bg-blue-700' : '' }}">
                             Plan de Cuentas (PUC)
                         </a>
-                        <a href="#" class="flex items-center px-4 py-2 text-sm text-blue-100 rounded-lg hover:bg-blue-700 transition">
+                        <a href="{{ route('contabilidad.asientos') }}" class="flex items-center px-4 py-2 text-sm text-blue-100 rounded-lg hover:bg-blue-700 transition {{ request()->routeIs('contabilidad.asientos') || request()->routeIs('contabilidad.ver-asiento') ? 'bg-blue-700' : '' }}">
                             Asientos Contables
+                        </a>
+                        <a href="{{ route('contabilidad.libro-diario') }}" class="flex items-center px-4 py-2 text-sm text-blue-100 rounded-lg hover:bg-blue-700 transition {{ request()->routeIs('contabilidad.libro-diario') ? 'bg-blue-700' : '' }}">
+                            Libro Diario
+                        </a>
+                        <a href="{{ route('contabilidad.libro-mayor') }}" class="flex items-center px-4 py-2 text-sm text-blue-100 rounded-lg hover:bg-blue-700 transition {{ request()->routeIs('contabilidad.libro-mayor') ? 'bg-blue-700' : '' }}">
+                            Libro Mayor
+                        </a>
+                        <a href="{{ route('contabilidad.balance-comprobacion') }}" class="flex items-center px-4 py-2 text-sm text-blue-100 rounded-lg hover:bg-blue-700 transition {{ request()->routeIs('contabilidad.balance-comprobacion') ? 'bg-blue-700' : '' }}">
+                            Balance de Comprobación
                         </a>
                     </div>
                 </div>
