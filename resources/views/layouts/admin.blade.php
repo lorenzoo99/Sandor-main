@@ -161,12 +161,30 @@
                 </div>
 
                 <!-- Nómina -->
-                <a href="#" class="flex items-center px-4 py-3 mb-2 text-sm font-medium text-blue-100 rounded-lg hover:bg-blue-700 transition">
-                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                    </svg>
-                    Nómina
-                </a>
+                <div x-data="{ open: {{ request()->routeIs('nomina.*') ? 'true' : 'false' }} }">
+                    <button @click="open = !open" class="flex items-center justify-between w-full px-4 py-3 mb-2 text-sm font-medium text-blue-100 rounded-lg hover:bg-blue-700 transition">
+                        <div class="flex items-center">
+                            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                            </svg>
+                            Nómina
+                        </div>
+                        <svg class="w-4 h-4 transition-transform" :class="{ 'rotate-180': open }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </button>
+                    <div x-show="open" x-collapse class="ml-4 space-y-1">
+                        <a href="{{ route('nomina.empleados.index') }}" class="flex items-center px-4 py-2 text-sm text-blue-100 rounded-lg hover:bg-blue-700 transition {{ request()->routeIs('nomina.empleados.*') ? 'bg-blue-700' : '' }}">
+                            Empleados
+                        </a>
+                        <a href="{{ route('nomina.nominas.index') }}" class="flex items-center px-4 py-2 text-sm text-blue-100 rounded-lg hover:bg-blue-700 transition {{ request()->routeIs('nomina.nominas.index') || request()->routeIs('nomina.nominas.ver') ? 'bg-blue-700' : '' }}">
+                            Nóminas
+                        </a>
+                        <a href="{{ route('nomina.nominas.procesar') }}" class="flex items-center px-4 py-2 text-sm text-blue-100 rounded-lg hover:bg-blue-700 transition {{ request()->routeIs('nomina.nominas.procesar') ? 'bg-blue-700' : '' }}">
+                            Procesar Nómina
+                        </a>
+                    </div>
+                </div>
 
                 <!-- Reportes DIAN -->
                 <a href="#" class="flex items-center px-4 py-3 mb-2 text-sm font-medium text-blue-100 rounded-lg hover:bg-blue-700 transition">

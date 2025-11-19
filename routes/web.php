@@ -4,6 +4,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\FacturaController;
 use App\Http\Controllers\FacturaCompraController;
 use App\Http\Controllers\ContabilidadController;
+use App\Http\Controllers\NominaController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -49,6 +50,25 @@ Route::middleware(['auth'])->prefix('contabilidad')->name('contabilidad.')->grou
     Route::get('/libro-diario', [ContabilidadController::class, 'libroDiario'])->name('libro-diario');
     Route::get('/libro-mayor', [ContabilidadController::class, 'libroMayor'])->name('libro-mayor');
     Route::get('/balance-comprobacion', [ContabilidadController::class, 'balanceComprobacion'])->name('balance-comprobacion');
+});
+
+// Payroll Routes (Nómina)
+Route::middleware(['auth'])->prefix('nomina')->name('nomina.')->group(function () {
+    // Empleados
+    Route::get('/empleados', [NominaController::class, 'indexEmpleados'])->name('empleados.index');
+    Route::get('/empleados/crear', [NominaController::class, 'crearEmpleado'])->name('empleados.crear');
+    Route::post('/empleados/guardar', [NominaController::class, 'guardarEmpleado'])->name('empleados.guardar');
+    Route::get('/empleados/{empleado}', [NominaController::class, 'verEmpleado'])->name('empleados.ver');
+    Route::get('/empleados/{empleado}/editar', [NominaController::class, 'editarEmpleado'])->name('empleados.editar');
+    Route::put('/empleados/{empleado}', [NominaController::class, 'actualizarEmpleado'])->name('empleados.actualizar');
+    Route::patch('/empleados/{empleado}/toggle-estado', [NominaController::class, 'toggleEstadoEmpleado'])->name('empleados.toggle-estado');
+
+    // Nóminas
+    Route::get('/nominas', [NominaController::class, 'indexNominas'])->name('nominas.index');
+    Route::get('/nominas/procesar', [NominaController::class, 'procesarNomina'])->name('nominas.procesar');
+    Route::post('/nominas/guardar', [NominaController::class, 'guardarNomina'])->name('nominas.guardar');
+    Route::get('/nominas/{nomina}', [NominaController::class, 'verNomina'])->name('nominas.ver');
+    Route::patch('/nominas/{nomina}/marcar-pagada', [NominaController::class, 'marcarPagada'])->name('nominas.marcar-pagada');
 });
 
 // User Management Routes (Protected - requires auth and SUPERADMIN role)
