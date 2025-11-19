@@ -58,7 +58,7 @@
         </x-card>
 
         <!-- Información DIAN -->
-        <x-card title="📋 Información DIAN">
+        <x-card title="📋 Información DIAN" id="dianSection">
             <p class="text-sm text-gray-600 mb-4">Datos requeridos por la DIAN para facturación electrónica</p>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -498,21 +498,24 @@ function formatCurrency(amount) {
     }).format(amount);
 }
 
-// Mostrar/Ocultar sección de cliente según tipo de factura
+// Mostrar/Ocultar secciones según tipo de factura
 function toggleClienteSection() {
     const tipoFactura = document.getElementById('tipo_factura').value;
     const clienteSection = document.getElementById('clienteSection');
+    const dianSection = document.getElementById('dianSection');
     const idCliente = document.getElementById('id_cliente');
     const clienteRequired = document.getElementById('clienteRequired');
 
     if (tipoFactura === 'ELECTRONICA') {
-        // Mostrar sección de cliente y hacer campo requerido
+        // Mostrar secciones de cliente y DIAN para factura electrónica
         clienteSection.style.display = 'block';
+        dianSection.style.display = 'block';
         idCliente.required = true;
         if (clienteRequired) clienteRequired.style.display = 'inline';
     } else {
-        // Ocultar sección de cliente y quitar requerimiento
+        // Ocultar secciones de cliente y DIAN para factura normal/POS
         clienteSection.style.display = 'none';
+        dianSection.style.display = 'none';
         idCliente.required = false;
         idCliente.value = '';
         if (clienteRequired) clienteRequired.style.display = 'none';
