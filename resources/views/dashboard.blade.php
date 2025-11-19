@@ -68,16 +68,11 @@
         <!-- Recent Transactions -->
         <x-card title="Últimas Transacciones">
             <div class="space-y-4">
-                @foreach([
-                    ['type' => 'Venta', 'client' => 'Cliente ABC', 'amount' => '+$1,234,500', 'date' => 'Hoy, 10:30 AM', 'positive' => true],
-                    ['type' => 'Compra', 'client' => 'Proveedor XYZ', 'amount' => '-$890,000', 'date' => 'Ayer, 3:45 PM', 'positive' => false],
-                    ['type' => 'Venta', 'client' => 'Cliente DEF', 'amount' => '+$567,800', 'date' => 'Ayer, 11:20 AM', 'positive' => true],
-                    ['type' => 'Nómina', 'client' => 'Empleados', 'amount' => '-$4,500,000', 'date' => '2 días', 'positive' => false],
-                ] as $transaction)
+                @forelse($transacciones as $transaccion)
                 <div class="flex items-center justify-between py-3 border-b border-gray-100 last:border-0">
                     <div class="flex items-center space-x-3">
-                        <div class="w-10 h-10 rounded-full {{ $transaction['positive'] ? 'bg-green-100' : 'bg-red-100' }} flex items-center justify-center">
-                            @if($transaction['positive'])
+                        <div class="w-10 h-10 rounded-full {{ $transaccion->tipo === 'Venta' ? 'bg-green-100' : 'bg-red-100' }} flex items-center justify-center">
+                            @if($transaccion->tipo === 'Venta')
                                 <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11l5-5m0 0l5 5m-5-5v12"></path>
                                 </svg>
@@ -88,59 +83,94 @@
                             @endif
                         </div>
                         <div>
-                            <p class="font-medium text-gray-900">{{ $transaction['type'] }}</p>
-                            <p class="text-sm text-gray-500">{{ $transaction['client'] }}</p>
+                            <p class="font-medium text-gray-900">{{ $transaccion->tipo }} #{{ $transaccion->numero_factura }}</p>
+                            <p class="text-sm text-gray-500">{{ $transaccion->entidad }}</p>
                         </div>
                     </div>
                     <div class="text-right">
-                        <p class="font-semibold {{ $transaction['positive'] ? 'text-green-600' : 'text-red-600' }}">
-                            {{ $transaction['amount'] }}
+                        <p class="font-semibold {{ $transaccion->tipo === 'Venta' ? 'text-green-600' : 'text-red-600' }}">
+                            {{ $transaccion->tipo === 'Venta' ? '+' : '-' }}${{ number_format($transaccion->total, 0, ',', '.') }}
                         </p>
-                        <p class="text-xs text-gray-500">{{ $transaction['date'] }}</p>
+                        <p class="text-xs text-gray-500">{{ \Carbon\Carbon::parse($transaccion->fecha)->locale('es')->diffForHumans() }}</p>
                     </div>
                 </div>
-                @endforeach
+                @empty
+                <div class="text-center py-4 text-gray-500">
+                    <p>No hay transacciones recientes</p>
+                </div>
+                @endforelse
             </div>
             <x-slot name="footer">
-                <a href="#" class="text-sm text-blue-600 hover:text-blue-800 font-medium">
-                    Ver todas las transacciones →
+                <a href="{{ route('facturas.index') }}" class="text-sm text-blue-600 hover:text-blue-800 font-medium">
+                    Ver todas las facturas →
                 </a>
             </x-slot>
         </x-card>
 
         <!-- Pending Tasks -->
         <x-card title="Tareas Pendientes">
-            <div class="space-y-3">
-                @foreach([
-                    ['task' => 'Revisar facturas pendientes de aprobación', 'count' => 5, 'priority' => 'high'],
-                    ['task' => 'Conciliación bancaria mensual', 'count' => 1, 'priority' => 'high'],
-                    ['task' => 'Generar reporte IVA del mes', 'count' => 1, 'priority' => 'medium'],
-                    ['task' => 'Actualizar datos de proveedores', 'count' => 3, 'priority' => 'low'],
-                    ['task' => 'Revisar cuentas por cobrar vencidas', 'count' => 12, 'priority' => 'medium'],
-                ] as $task)
-                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
+            <!-- Formulario para agregar tarea -->
+            <div class="mb-4 p-3 bg-gray-50 rounded-lg">
+                <form id="formAgregarTarea" class="space-y-2">
+                    @csrf
+                    <input
+                        type="text"
+                        name="descripcion"
+                        id="nuevaTareaDescripcion"
+                        placeholder="Nueva tarea..."
+                        class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
+                        required
+                    >
+                    <div class="flex gap-2">
+                        <select name="prioridad" id="nuevaTareaPrioridad" class="flex-1 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
+                            <option value="baja">Baja prioridad</option>
+                            <option value="media" selected>Media prioridad</option>
+                            <option value="alta">Alta prioridad</option>
+                        </select>
+                        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm">
+                            Agregar
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Lista de tareas -->
+            <div class="space-y-3" id="listaTareas">
+                @forelse($tareas as $tarea)
+                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition" data-tarea-id="{{ $tarea->id_tarea }}">
                     <div class="flex items-center space-x-3">
-                        <input type="checkbox" class="w-4 h-4 text-blue-600 rounded">
+                        <input
+                            type="checkbox"
+                            class="w-4 h-4 text-blue-600 rounded cursor-pointer"
+                            onchange="completarTarea({{ $tarea->id_tarea }})"
+                        >
                         <div>
-                            <p class="text-sm font-medium text-gray-900">{{ $task['task'] }}</p>
-                            @if($task['priority'] === 'high')
+                            <p class="text-sm font-medium text-gray-900">{{ $tarea->descripcion }}</p>
+                            @if($tarea->prioridad === 'alta')
                                 <x-badge type="error">Alta prioridad</x-badge>
-                            @elseif($task['priority'] === 'medium')
+                            @elseif($tarea->prioridad === 'media')
                                 <x-badge type="warning">Media prioridad</x-badge>
                             @else
                                 <x-badge type="default">Baja prioridad</x-badge>
                             @endif
                         </div>
                     </div>
-                    <x-badge type="info">{{ $task['count'] }}</x-badge>
+                    <button
+                        onclick="eliminarTarea({{ $tarea->id_tarea }})"
+                        class="text-red-500 hover:text-red-700 transition"
+                        title="Eliminar tarea"
+                    >
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                        </svg>
+                    </button>
                 </div>
-                @endforeach
+                @empty
+                <div class="text-center py-4 text-gray-500" id="sinTareas">
+                    <p>No hay tareas pendientes</p>
+                </div>
+                @endforelse
             </div>
-            <x-slot name="footer">
-                <a href="#" class="text-sm text-blue-600 hover:text-blue-800 font-medium">
-                    Ver todas las tareas →
-                </a>
-            </x-slot>
         </x-card>
     </div>
 
@@ -166,3 +196,202 @@
     </x-card>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+    // CSRF token for AJAX requests
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+    // Function to complete a task
+    async function completarTarea(id) {
+        try {
+            const response = await fetch(`/tareas/${id}/completar`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json'
+                }
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                // Remove task element from DOM with animation
+                const tareaElement = document.querySelector(`[data-tarea-id="${id}"]`);
+                if (tareaElement) {
+                    tareaElement.style.transition = 'opacity 0.3s, transform 0.3s';
+                    tareaElement.style.opacity = '0';
+                    tareaElement.style.transform = 'translateX(20px)';
+                    setTimeout(() => {
+                        tareaElement.remove();
+                        checkEmptyTasks();
+                    }, 300);
+                }
+            } else {
+                alert('Error al completar la tarea');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Error al completar la tarea');
+        }
+    }
+
+    // Function to delete a task
+    async function eliminarTarea(id) {
+        if (!confirm('¿Está seguro de eliminar esta tarea?')) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/tareas/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json'
+                }
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                // Remove task element from DOM with animation
+                const tareaElement = document.querySelector(`[data-tarea-id="${id}"]`);
+                if (tareaElement) {
+                    tareaElement.style.transition = 'opacity 0.3s, transform 0.3s';
+                    tareaElement.style.opacity = '0';
+                    tareaElement.style.transform = 'translateX(-20px)';
+                    setTimeout(() => {
+                        tareaElement.remove();
+                        checkEmptyTasks();
+                    }, 300);
+                }
+            } else {
+                alert('Error al eliminar la tarea');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Error al eliminar la tarea');
+        }
+    }
+
+    // Check if task list is empty and show message
+    function checkEmptyTasks() {
+        const listaTareas = document.getElementById('listaTareas');
+        const tareas = listaTareas.querySelectorAll('[data-tarea-id]');
+
+        if (tareas.length === 0) {
+            const emptyMessage = document.createElement('div');
+            emptyMessage.className = 'text-center py-4 text-gray-500';
+            emptyMessage.id = 'sinTareas';
+            emptyMessage.innerHTML = '<p>No hay tareas pendientes</p>';
+            listaTareas.appendChild(emptyMessage);
+        }
+    }
+
+    // Form submit handler for adding tasks
+    document.getElementById('formAgregarTarea').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const descripcion = document.getElementById('nuevaTareaDescripcion').value.trim();
+        const prioridad = document.getElementById('nuevaTareaPrioridad').value;
+
+        if (!descripcion) {
+            alert('Por favor ingrese una descripción para la tarea');
+            return;
+        }
+
+        try {
+            const response = await fetch('/tareas/agregar', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    descripcion: descripcion,
+                    prioridad: prioridad
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                // Remove empty message if exists
+                const sinTareas = document.getElementById('sinTareas');
+                if (sinTareas) {
+                    sinTareas.remove();
+                }
+
+                // Create new task element
+                const listaTareas = document.getElementById('listaTareas');
+                const nuevaTarea = document.createElement('div');
+                nuevaTarea.className = 'flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition';
+                nuevaTarea.setAttribute('data-tarea-id', data.tarea.id);
+                nuevaTarea.style.opacity = '0';
+                nuevaTarea.style.transform = 'translateY(-10px)';
+
+                // Determine badge color based on priority
+                let badgeClass = '';
+                let badgeText = '';
+                if (data.tarea.prioridad === 'alta') {
+                    badgeClass = 'bg-red-100 text-red-800';
+                    badgeText = 'Alta prioridad';
+                } else if (data.tarea.prioridad === 'media') {
+                    badgeClass = 'bg-yellow-100 text-yellow-800';
+                    badgeText = 'Media prioridad';
+                } else {
+                    badgeClass = 'bg-gray-100 text-gray-800';
+                    badgeText = 'Baja prioridad';
+                }
+
+                nuevaTarea.innerHTML = `
+                    <div class="flex items-center space-x-3">
+                        <input
+                            type="checkbox"
+                            class="w-4 h-4 text-blue-600 rounded cursor-pointer"
+                            onchange="completarTarea(${data.tarea.id})"
+                        >
+                        <div>
+                            <p class="text-sm font-medium text-gray-900">${data.tarea.descripcion}</p>
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${badgeClass}">
+                                ${badgeText}
+                            </span>
+                        </div>
+                    </div>
+                    <button
+                        onclick="eliminarTarea(${data.tarea.id})"
+                        class="text-red-500 hover:text-red-700 transition"
+                        title="Eliminar tarea"
+                    >
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                        </svg>
+                    </button>
+                `;
+
+                // Insert at the beginning of the list
+                listaTareas.insertBefore(nuevaTarea, listaTareas.firstChild);
+
+                // Animate in
+                setTimeout(() => {
+                    nuevaTarea.style.transition = 'opacity 0.3s, transform 0.3s';
+                    nuevaTarea.style.opacity = '1';
+                    nuevaTarea.style.transform = 'translateY(0)';
+                }, 10);
+
+                // Clear form
+                document.getElementById('nuevaTareaDescripcion').value = '';
+                document.getElementById('nuevaTareaPrioridad').value = 'media';
+            } else {
+                alert('Error al agregar la tarea');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Error al agregar la tarea');
+        }
+    });
+</script>
+@endpush

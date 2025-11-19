@@ -6,9 +6,11 @@ use App\Http\Controllers\FacturaCompraController;
 use App\Http\Controllers\ContabilidadController;
 use App\Http\Controllers\NominaController;
 use App\Http\Controllers\ProductoController;
+use App\Http\Controllers\TareaController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 
 Route::get('/', function () {
@@ -39,12 +41,56 @@ Route::get('/dashboard', function () {
     // Calcular balance
     $balance = ($ingresos->total ?? 0) - ($gastos->total ?? 0);
 
+    // Obtener últimas transacciones (ventas y compras combinadas)
+    $ventas = DB::table('FacturaVenta')
+        ->select(
+            'numero_factura',
+            'total',
+            'fecha_emision as fecha',
+            DB::raw("'Venta' as tipo"),
+            DB::raw("'Cliente' as entidad")
+        )
+        ->where('estado', '!=', 'ANULADA')
+        ->orderBy('fecha_emision', 'desc')
+        ->limit(5)
+        ->get();
+
+    $compras = DB::table('FacturaCompra')
+        ->join('Proveedor', 'FacturaCompra.id_proveedor', '=', 'Proveedor.id_proveedor')
+        ->select(
+            'FacturaCompra.numero_factura',
+            'FacturaCompra.total',
+            'FacturaCompra.fecha_emision as fecha',
+            DB::raw("'Compra' as tipo"),
+            'Proveedor.nombre as entidad'
+        )
+        ->where('FacturaCompra.estado', '!=', 'ANULADA')
+        ->orderBy('FacturaCompra.fecha_emision', 'desc')
+        ->limit(5)
+        ->get();
+
+    // Combinar y ordenar por fecha
+    $transacciones = $ventas->concat($compras)
+        ->sortByDesc('fecha')
+        ->take(5)
+        ->values();
+
+    // Obtener tareas pendientes del usuario
+    $tareas = DB::table('TareaPendiente')
+        ->where('id_usuario', Auth::id())
+        ->where('completada', false)
+        ->orderByRaw("FIELD(prioridad, 'alta', 'media', 'baja')")
+        ->orderBy('fecha_creacion', 'desc')
+        ->get();
+
     return view('dashboard', [
         'ingresosMes' => $ingresos->total ?? 0,
         'gastosMes' => $gastos->total ?? 0,
         'facturasEmitidas' => $ingresos->cantidad ?? 0,
         'comprasRealizadas' => $gastos->cantidad ?? 0,
         'balance' => $balance,
+        'transacciones' => $transacciones,
+        'tareas' => $tareas,
     ]);
 })->middleware(['auth', 'verified'])->name('dashboard');
 
@@ -126,6 +172,14 @@ Route::middleware(['auth', 'role:SUPERADMIN'])->prefix('usuarios')->name('usuari
     Route::put('/{usuario}', [UserController::class, 'update'])->name('update');
     Route::delete('/{usuario}', [UserController::class, 'destroy'])->name('destroy');
     Route::patch('/{usuario}/toggle-status', [UserController::class, 'toggleStatus'])->name('toggle-status');
+});
+
+// Task Routes (Tareas Pendientes)
+Route::middleware(['auth'])->prefix('tareas')->name('tareas.')->group(function () {
+    Route::post('/agregar', [TareaController::class, 'agregar'])->name('agregar');
+    Route::patch('/{id}/completar', [TareaController::class, 'completar'])->name('completar');
+    Route::delete('/{id}', [TareaController::class, 'eliminar'])->name('eliminar');
+    Route::get('/listar', [TareaController::class, 'listar'])->name('listar');
 });
 
 require __DIR__.'/auth.php';
