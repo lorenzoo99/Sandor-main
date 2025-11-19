@@ -308,12 +308,12 @@
         </x-card>
 
         <!-- Productos/Servicios -->
-        <x-card title="🛒 Productos o Servicios">
-            <p class="text-sm text-gray-600 mb-4">Agrega los productos o servicios que incluye esta factura</p>
+        <x-card title="🛒 Productos">
+            <p class="text-sm text-gray-600 mb-4">Busca y selecciona productos del catálogo para agregar a la factura</p>
 
             <div id="items-container" class="space-y-4">
                 <!-- Item 1 (inicial) -->
-                <div class="item-row border border-gray-200 rounded-lg p-4 bg-gray-50">
+                <div class="item-row border border-gray-200 rounded-lg p-4 bg-gray-50" data-item-index="0">
                     <div class="flex justify-between items-center mb-3">
                         <h4 class="font-medium text-gray-700">Item #1</h4>
                         <button type="button" onclick="removeItem(this)" class="text-red-600 hover:text-red-800 text-sm hidden">
@@ -322,21 +322,37 @@
                     </div>
 
                     <div class="grid grid-cols-1 gap-3">
-                        <!-- Descripción -->
-                        <div>
+                        <!-- Búsqueda de Producto -->
+                        <div class="relative">
                             <label class="block text-sm font-medium text-gray-700 mb-1">
-                                Descripción del Producto/Servicio <span class="text-red-500">*</span>
+                                Buscar Producto <span class="text-red-500">*</span>
                             </label>
                             <input
                                 type="text"
-                                name="items[0][descripcion]"
-                                placeholder="Ej: Ibuprofeno 400mg x 30 tabletas"
-                                required
-                                class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                class="producto-search w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                placeholder="Escribe el código o nombre del producto..."
+                                autocomplete="off"
+                                oninput="buscarProducto(this)"
                             >
+                            <!-- Dropdown de resultados -->
+                            <div class="producto-results absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg hidden max-h-60 overflow-y-auto"></div>
+
+                            <!-- Campo oculto para ID del producto -->
+                            <input type="hidden" name="items[0][producto_id]" class="producto-id">
+
+                            <!-- Descripción del producto seleccionado (readonly) -->
+                            <input
+                                type="text"
+                                name="items[0][descripcion]"
+                                class="producto-descripcion mt-2 w-full rounded-lg border-gray-300 bg-gray-100 shadow-sm"
+                                placeholder="Selecciona un producto..."
+                                readonly
+                                required
+                            >
+                            <p class="mt-1 text-xs text-gray-500">💡 Comienza a escribir para buscar productos</p>
                         </div>
 
-                        <div class="grid grid-cols-4 gap-3">
+                        <div class="grid grid-cols-5 gap-3">
                             <!-- Cantidad -->
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">
@@ -349,16 +365,27 @@
                                     step="1"
                                     value="1"
                                     required
-                                    onchange="calcularTotales()"
+                                    onchange="calcularIvaItem(this.closest('.item-row')); calcularTotales();"
                                     class="cantidad w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                                 >
                                 <p class="mt-1 text-xs text-gray-500">Unidades</p>
                             </div>
 
-                            <!-- Valor Unitario -->
+                            <!-- Stock Disponible -->
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">
-                                    Valor Unitario <span class="text-red-500">*</span>
+                                    Stock
+                                </label>
+                                <div class="stock-display px-3 py-2 rounded-lg bg-gray-100 border border-gray-300 text-center font-medium text-gray-600">
+                                    -
+                                </div>
+                                <p class="mt-1 text-xs text-gray-500">Disponible</p>
+                            </div>
+
+                            <!-- Precio Unitario (sin IVA) -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">
+                                    Precio Unitario
                                 </label>
                                 <input
                                     type="number"
@@ -366,17 +393,30 @@
                                     min="0"
                                     step="0.01"
                                     value="0"
-                                    required
-                                    onchange="calcularTotales()"
-                                    class="valor-unitario w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                    readonly
+                                    class="valor-unitario w-full rounded-lg border-gray-300 bg-gray-100 shadow-sm"
                                 >
-                                <p class="mt-1 text-xs text-gray-500">Precio c/u</p>
+                                <p class="mt-1 text-xs text-gray-500">Sin IVA</p>
                             </div>
 
-                            <!-- IVA -->
+                            <!-- Porcentaje IVA -->
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">
-                                    IVA (opcional)
+                                    % IVA
+                                </label>
+                                <input
+                                    type="text"
+                                    class="porcentaje-iva w-full rounded-lg border-gray-300 bg-gray-100 shadow-sm text-center"
+                                    readonly
+                                    value="-"
+                                >
+                                <p class="mt-1 text-xs text-gray-500">Porcentaje</p>
+                            </div>
+
+                            <!-- IVA Total del Item -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">
+                                    IVA Item
                                 </label>
                                 <input
                                     type="number"
@@ -384,24 +424,18 @@
                                     min="0"
                                     step="0.01"
                                     value="0"
-                                    onchange="calcularTotales()"
-                                    class="iva-item w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                                >
-                                <p class="mt-1 text-xs text-gray-500">IVA del item</p>
-                            </div>
-
-                            <!-- Subtotal Item -->
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">
-                                    Subtotal
-                                </label>
-                                <input
-                                    type="text"
                                     readonly
-                                    value="$0"
-                                    class="subtotal-item w-full rounded-lg border-gray-300 bg-gray-100 shadow-sm"
+                                    class="iva-item w-full rounded-lg border-gray-300 bg-gray-100 shadow-sm"
                                 >
-                                <p class="mt-1 text-xs text-gray-500">Calculado</p>
+                                <p class="mt-1 text-xs text-gray-500">Total IVA</p>
+                            </div>
+                        </div>
+
+                        <!-- Subtotal del Item -->
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm font-medium text-gray-700">Subtotal del item:</span>
+                                <span class="subtotal-item text-xl font-bold text-blue-600">$0</span>
                             </div>
                         </div>
                     </div>
@@ -467,13 +501,125 @@
 @push('scripts')
 <script>
 let itemIndex = 1;
+let searchTimeout = null;
+
+// Búsqueda de productos con debounce
+function buscarProducto(input) {
+    const searchTerm = input.value.trim();
+    const itemRow = input.closest('.item-row');
+    const resultsDiv = itemRow.querySelector('.producto-results');
+
+    // Limpiar timeout anterior
+    if (searchTimeout) {
+        clearTimeout(searchTimeout);
+    }
+
+    // Si el campo está vacío, ocultar resultados
+    if (searchTerm.length < 2) {
+        resultsDiv.classList.add('hidden');
+        return;
+    }
+
+    // Buscar después de 300ms de inactividad
+    searchTimeout = setTimeout(async () => {
+        try {
+            const response = await fetch(`/productos/buscar?search=${encodeURIComponent(searchTerm)}`);
+            const productos = await response.json();
+
+            if (productos.length === 0) {
+                resultsDiv.innerHTML = '<div class="p-3 text-sm text-gray-500 text-center">No se encontraron productos</div>';
+                resultsDiv.classList.remove('hidden');
+                return;
+            }
+
+            // Mostrar resultados
+            let html = '';
+            productos.forEach(producto => {
+                const stockClass = producto.stock > 10 ? 'text-green-600' : producto.stock > 0 ? 'text-yellow-600' : 'text-red-600';
+                const stockIcon = producto.stock > 0 ? '✓' : '✗';
+                html += `
+                    <div class="p-3 hover:bg-gray-100 cursor-pointer border-b border-gray-200 last:border-b-0" onclick='seleccionarProducto(${JSON.stringify(producto)}, this)'>
+                        <div class="flex justify-between items-start">
+                            <div class="flex-1">
+                                <p class="font-medium text-gray-900">${producto.nombre}</p>
+                                <p class="text-xs text-gray-500">Código: ${producto.codigo}</p>
+                            </div>
+                            <div class="text-right ml-2">
+                                <p class="font-bold text-gray-900">$${formatNumber(producto.precio)}</p>
+                                <p class="text-xs text-gray-500">+ IVA ${producto.porcentaje_iva}%</p>
+                            </div>
+                        </div>
+                        <div class="mt-1 flex items-center justify-between">
+                            <span class="text-xs ${stockClass}">${stockIcon} Stock: ${producto.stock}</span>
+                            <span class="text-xs font-medium text-blue-600">Total: $${formatNumber(producto.precio_con_iva)}</span>
+                        </div>
+                    </div>
+                `;
+            });
+
+            resultsDiv.innerHTML = html;
+            resultsDiv.classList.remove('hidden');
+
+        } catch (error) {
+            console.error('Error al buscar productos:', error);
+            resultsDiv.innerHTML = '<div class="p-3 text-sm text-red-500 text-center">Error al buscar productos</div>';
+            resultsDiv.classList.remove('hidden');
+        }
+    }, 300);
+}
+
+// Seleccionar producto del dropdown
+function seleccionarProducto(producto, element) {
+    const itemRow = element.closest('.item-row');
+
+    // Llenar campos
+    itemRow.querySelector('.producto-id').value = producto.id;
+    itemRow.querySelector('.producto-descripcion').value = `${producto.codigo} - ${producto.nombre}`;
+    itemRow.querySelector('.valor-unitario').value = producto.precio;
+    itemRow.querySelector('.porcentaje-iva').value = producto.porcentaje_iva + '%';
+
+    // Actualizar stock display con color
+    const stockDisplay = itemRow.querySelector('.stock-display');
+    stockDisplay.textContent = producto.stock;
+    stockDisplay.classList.remove('text-gray-600', 'text-green-600', 'text-yellow-600', 'text-red-600', 'bg-gray-100', 'bg-green-50', 'bg-yellow-50', 'bg-red-50');
+
+    if (producto.stock > 10) {
+        stockDisplay.classList.add('text-green-600', 'bg-green-50');
+    } else if (producto.stock > 0) {
+        stockDisplay.classList.add('text-yellow-600', 'bg-yellow-50');
+    } else {
+        stockDisplay.classList.add('text-red-600', 'bg-red-50');
+    }
+
+    // Limpiar búsqueda y ocultar resultados
+    itemRow.querySelector('.producto-search').value = '';
+    itemRow.querySelector('.producto-results').classList.add('hidden');
+
+    // Calcular IVA y totales
+    calcularIvaItem(itemRow);
+    calcularTotales();
+}
+
+// Calcular IVA de un item cuando cambia la cantidad
+function calcularIvaItem(itemRow) {
+    const cantidad = parseFloat(itemRow.querySelector('.cantidad').value) || 0;
+    const valorUnitario = parseFloat(itemRow.querySelector('.valor-unitario').value) || 0;
+    const porcentajeIvaText = itemRow.querySelector('.porcentaje-iva').value;
+    const porcentajeIva = parseFloat(porcentajeIvaText.replace('%', '')) || 0;
+
+    // Calcular IVA total del item
+    const subtotalSinIva = cantidad * valorUnitario;
+    const ivaItem = subtotalSinIva * (porcentajeIva / 100);
+
+    itemRow.querySelector('.iva-item').value = ivaItem.toFixed(2);
+}
 
 function agregarItem() {
     const container = document.getElementById('items-container');
     const newIndex = itemIndex;
 
     const itemHTML = `
-        <div class="item-row border border-gray-200 rounded-lg p-4 bg-gray-50">
+        <div class="item-row border border-gray-200 rounded-lg p-4 bg-gray-50" data-item-index="${newIndex}">
             <div class="flex justify-between items-center mb-3">
                 <h4 class="font-medium text-gray-700">Item #${newIndex + 1}</h4>
                 <button type="button" onclick="removeItem(this)" class="text-red-600 hover:text-red-800 text-sm">
@@ -482,20 +628,33 @@ function agregarItem() {
             </div>
 
             <div class="grid grid-cols-1 gap-3">
-                <div>
+                <div class="relative">
                     <label class="block text-sm font-medium text-gray-700 mb-1">
-                        Descripción del Producto/Servicio <span class="text-red-500">*</span>
+                        Buscar Producto <span class="text-red-500">*</span>
                     </label>
                     <input
                         type="text"
-                        name="items[${newIndex}][descripcion]"
-                        placeholder="Ej: Ibuprofeno 400mg x 30 tabletas"
-                        required
-                        class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                        class="producto-search w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                        placeholder="Escribe el código o nombre del producto..."
+                        autocomplete="off"
+                        oninput="buscarProducto(this)"
                     >
+                    <div class="producto-results absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg hidden max-h-60 overflow-y-auto"></div>
+
+                    <input type="hidden" name="items[${newIndex}][producto_id]" class="producto-id">
+
+                    <input
+                        type="text"
+                        name="items[${newIndex}][descripcion]"
+                        class="producto-descripcion mt-2 w-full rounded-lg border-gray-300 bg-gray-100 shadow-sm"
+                        placeholder="Selecciona un producto..."
+                        readonly
+                        required
+                    >
+                    <p class="mt-1 text-xs text-gray-500">💡 Comienza a escribir para buscar productos</p>
                 </div>
 
-                <div class="grid grid-cols-4 gap-3">
+                <div class="grid grid-cols-5 gap-3">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">
                             Cantidad <span class="text-red-500">*</span>
@@ -507,7 +666,7 @@ function agregarItem() {
                             step="1"
                             value="1"
                             required
-                            onchange="calcularTotales()"
+                            onchange="calcularIvaItem(this.closest('.item-row')); calcularTotales();"
                             class="cantidad w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                         >
                         <p class="mt-1 text-xs text-gray-500">Unidades</p>
@@ -515,7 +674,17 @@ function agregarItem() {
 
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">
-                            Valor Unitario <span class="text-red-500">*</span>
+                            Stock
+                        </label>
+                        <div class="stock-display px-3 py-2 rounded-lg bg-gray-100 border border-gray-300 text-center font-medium text-gray-600">
+                            -
+                        </div>
+                        <p class="mt-1 text-xs text-gray-500">Disponible</p>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            Precio Unitario
                         </label>
                         <input
                             type="number"
@@ -523,16 +692,28 @@ function agregarItem() {
                             min="0"
                             step="0.01"
                             value="0"
-                            required
-                            onchange="calcularTotales()"
-                            class="valor-unitario w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                            readonly
+                            class="valor-unitario w-full rounded-lg border-gray-300 bg-gray-100 shadow-sm"
                         >
-                        <p class="mt-1 text-xs text-gray-500">Precio c/u</p>
+                        <p class="mt-1 text-xs text-gray-500">Sin IVA</p>
                     </div>
 
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">
-                            IVA (opcional)
+                            % IVA
+                        </label>
+                        <input
+                            type="text"
+                            class="porcentaje-iva w-full rounded-lg border-gray-300 bg-gray-100 shadow-sm text-center"
+                            readonly
+                            value="-"
+                        >
+                        <p class="mt-1 text-xs text-gray-500">Porcentaje</p>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            IVA Item
                         </label>
                         <input
                             type="number"
@@ -540,23 +721,17 @@ function agregarItem() {
                             min="0"
                             step="0.01"
                             value="0"
-                            onchange="calcularTotales()"
-                            class="iva-item w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                        >
-                        <p class="mt-1 text-xs text-gray-500">IVA del item</p>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">
-                            Subtotal
-                        </label>
-                        <input
-                            type="text"
                             readonly
-                            value="$0"
-                            class="subtotal-item w-full rounded-lg border-gray-300 bg-gray-100 shadow-sm"
+                            class="iva-item w-full rounded-lg border-gray-300 bg-gray-100 shadow-sm"
                         >
-                        <p class="mt-1 text-xs text-gray-500">Calculado</p>
+                        <p class="mt-1 text-xs text-gray-500">Total IVA</p>
+                    </div>
+                </div>
+
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm font-medium text-gray-700">Subtotal del item:</span>
+                        <span class="subtotal-item text-xl font-bold text-blue-600">$0</span>
                     </div>
                 </div>
             </div>
@@ -565,7 +740,6 @@ function agregarItem() {
 
     container.insertAdjacentHTML('beforeend', itemHTML);
     itemIndex++;
-    calcularTotales();
 }
 
 function removeItem(button) {
@@ -577,15 +751,15 @@ function calcularTotales() {
     let subtotalTotal = 0;
     let ivaTotal = 0;
 
-    document.querySelectorAll('.item-row').forEach((item, index) => {
+    document.querySelectorAll('.item-row').forEach((item) => {
         const cantidad = parseFloat(item.querySelector('.cantidad').value) || 0;
         const valorUnitario = parseFloat(item.querySelector('.valor-unitario').value) || 0;
         const ivaItem = parseFloat(item.querySelector('.iva-item').value) || 0;
 
         const subtotalItem = cantidad * valorUnitario;
 
-        // Actualizar subtotal del item
-        item.querySelector('.subtotal-item').value = formatCurrency(subtotalItem);
+        // Actualizar subtotal del item (sin IVA)
+        item.querySelector('.subtotal-item').textContent = formatCurrency(subtotalItem + ivaItem);
 
         subtotalTotal += subtotalItem;
         ivaTotal += ivaItem;
@@ -597,6 +771,13 @@ function calcularTotales() {
     document.getElementById('display-subtotal').textContent = formatCurrency(subtotalTotal);
     document.getElementById('display-iva').textContent = formatCurrency(ivaTotal);
     document.getElementById('display-total').textContent = formatCurrency(total);
+}
+
+function formatNumber(num) {
+    return new Intl.NumberFormat('es-CO', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+    }).format(num);
 }
 
 function formatCurrency(amount) {
@@ -650,6 +831,15 @@ function toggleClienteSection() {
 document.addEventListener('DOMContentLoaded', function() {
     calcularTotales();
     toggleClienteSection(); // Inicializar estado de sección de cliente
+
+    // Cerrar dropdowns al hacer clic fuera
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.producto-search') && !e.target.closest('.producto-results')) {
+            document.querySelectorAll('.producto-results').forEach(div => {
+                div.classList.add('hidden');
+            });
+        }
+    });
 });
 </script>
 @endpush

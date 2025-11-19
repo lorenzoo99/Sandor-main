@@ -5,6 +5,7 @@ use App\Http\Controllers\FacturaController;
 use App\Http\Controllers\FacturaCompraController;
 use App\Http\Controllers\ContabilidadController;
 use App\Http\Controllers\NominaController;
+use App\Http\Controllers\ProductoController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -69,6 +70,20 @@ Route::middleware(['auth'])->prefix('nomina')->name('nomina.')->group(function (
     Route::post('/nominas/guardar', [NominaController::class, 'guardarNomina'])->name('nominas.guardar');
     Route::get('/nominas/{nomina}', [NominaController::class, 'verNomina'])->name('nominas.ver');
     Route::patch('/nominas/{nomina}/marcar-pagada', [NominaController::class, 'marcarPagada'])->name('nominas.marcar-pagada');
+});
+
+// Product Routes (Productos)
+Route::middleware(['auth'])->prefix('productos')->name('productos.')->group(function () {
+    Route::get('/', [ProductoController::class, 'index'])->name('index');
+    Route::get('/crear', [ProductoController::class, 'crear'])->name('crear');
+    Route::post('/guardar', [ProductoController::class, 'guardar'])->name('guardar');
+    Route::get('/{producto}/editar', [ProductoController::class, 'editar'])->name('editar');
+    Route::put('/{producto}', [ProductoController::class, 'actualizar'])->name('actualizar');
+    Route::patch('/{producto}/toggle-estado', [ProductoController::class, 'toggleEstado'])->name('toggle-estado');
+
+    // API routes for invoicing
+    Route::get('/buscar', [ProductoController::class, 'buscar'])->name('buscar');
+    Route::get('/{producto}/detalle', [ProductoController::class, 'detalle'])->name('detalle');
 });
 
 // User Management Routes (Protected - requires auth and SUPERADMIN role)
